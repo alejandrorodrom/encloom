@@ -1,0 +1,26 @@
+# Dependencias
+node_modules/
+
+# Build (tsup por defecto)
+dist/
+
+# Caché de herramientas
+.tsup/
+*.tsbuildinfo
+
+# Logs y entornos locales
+*.log
+npm-debug.log*
+.env
+.env.*
+!.env.example
+
+# Cobertura de tests
+coverage/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Editores (opcional: quita .vscode si versionáis ajustes del equipo)
+.idea/
