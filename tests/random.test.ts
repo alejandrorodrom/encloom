@@ -1,6 +1,16 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { randomBytes } from "../src/random.js";
 
+function viewFrom(
+  v: ArrayBufferView | null | undefined,
+  label = "getRandomValues",
+): ArrayBufferView {
+  if (v == null) {
+    throw new Error(`${label}: expected ArrayBufferView`);
+  }
+  return v;
+}
+
 describe("random", () => {
   it("returns requested byte length", () => {
     const a = randomBytes(16);
@@ -22,8 +32,9 @@ describe("random", () => {
 
     it("randomBytes(1) with scripted getRandomValues", () => {
       vi.spyOn(globalThis.crypto, "getRandomValues").mockImplementation((arr) => {
-        new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength).set([0x09]);
-        return arr;
+        const v = viewFrom(arr);
+        new Uint8Array(v.buffer, v.byteOffset, v.byteLength).set([0x09]);
+        return v;
       });
       expect(Buffer.from(randomBytes(1)).toString("hex")).toBe("09");
     });
@@ -31,8 +42,9 @@ describe("random", () => {
     it("randomBytes(16) with scripted getRandomValues", () => {
       const hex = "25e3420af7cd20308c0d6f93f77c512b";
       vi.spyOn(globalThis.crypto, "getRandomValues").mockImplementation((arr) => {
-        new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength).set(Buffer.from(hex, "hex"));
-        return arr;
+        const v = viewFrom(arr);
+        new Uint8Array(v.buffer, v.byteOffset, v.byteLength).set(Buffer.from(hex, "hex"));
+        return v;
       });
       expect(Buffer.from(randomBytes(16)).toString("hex")).toBe(hex);
     });
@@ -40,8 +52,9 @@ describe("random", () => {
     it("randomBytes(32) with scripted getRandomValues", () => {
       const hex = "9058afc8e180d23e8aa96c7bff925d032ecc72e4aa76ce4c0d53ff6d9523f457";
       vi.spyOn(globalThis.crypto, "getRandomValues").mockImplementation((arr) => {
-        new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength).set(Buffer.from(hex, "hex"));
-        return arr;
+        const v = viewFrom(arr);
+        new Uint8Array(v.buffer, v.byteOffset, v.byteLength).set(Buffer.from(hex, "hex"));
+        return v;
       });
       expect(Buffer.from(randomBytes(32)).toString("hex")).toBe(hex);
     });
@@ -59,12 +72,13 @@ describe("random", () => {
       );
       let offset = 0;
       vi.spyOn(globalThis.crypto, "getRandomValues").mockImplementation((arr) => {
-        const u8 = new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength);
+        const v = viewFrom(arr);
+        const u8 = new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
         for (let i = 0; i < u8.length; i++) {
           u8[i] = tape[offset]!;
           offset += 1;
         }
-        return arr;
+        return v;
       });
       expect(Buffer.from(randomBytes(1)).toString("hex")).toBe("09");
       expect(Buffer.from(randomBytes(16)).toString("hex")).toBe("25e3420af7cd20308c0d6f93f77c512b");
