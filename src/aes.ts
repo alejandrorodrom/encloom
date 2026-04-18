@@ -8,6 +8,15 @@ import {
 
 const { ModeOfOperation } = aesJs;
 
+function bytesToAesNumberArray(buf: Uint8Array): number[] {
+  const len = buf.length;
+  const out = new Array<number>(len);
+  for (let i = 0; i < len; i++) {
+    out[i] = buf[i]!;
+  }
+  return out;
+}
+
 function assertAesLengths(iv: Uint8Array, key: Uint8Array): void {
   if (iv.length !== IV_LENGTH) {
     throw new Error(ERROR_AES_IV_LENGTH);
@@ -62,10 +71,10 @@ export function aesCbcEncryptSync(
   assertAesLengths(iv, key);
   const padded = pkcs7Pad(data, IV_LENGTH);
   const cbc = new ModeOfOperation.cbc(
-    Array.from(key),
-    Array.from(iv)
+    bytesToAesNumberArray(key),
+    bytesToAesNumberArray(iv)
   );
-  return new Uint8Array(cbc.encrypt(Array.from(padded)));
+  return new Uint8Array(cbc.encrypt(bytesToAesNumberArray(padded)));
 }
 
 /**
@@ -82,10 +91,10 @@ export function aesCbcDecryptSync(
 ): Uint8Array {
   assertAesLengths(iv, key);
   const cbc = new ModeOfOperation.cbc(
-    Array.from(key),
-    Array.from(iv)
+    bytesToAesNumberArray(key),
+    bytesToAesNumberArray(iv)
   );
-  const decrypted = new Uint8Array(cbc.decrypt(Array.from(data)));
+  const decrypted = new Uint8Array(cbc.decrypt(bytesToAesNumberArray(data)));
   return pkcs7Unpad(decrypted, IV_LENGTH);
 }
 

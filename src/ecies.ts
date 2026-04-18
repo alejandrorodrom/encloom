@@ -22,8 +22,10 @@ import {
 import { randomBytes } from "./random";
 import { sha512, sha512Sync } from "./internal/sha512";
 import {
+  ECIES_SERIALIZED_MIN_LENGTH,
   ERROR_BAD_EPHEM_PRIVATE_KEY,
   ERROR_BAD_MAC,
+  ERROR_ECIES_SERIALIZED_LENGTH,
   IV_LENGTH,
   KEY_LENGTH,
   LENGTH_0,
@@ -214,6 +216,7 @@ export function serialize(opts: Encrypted): Uint8Array {
  * @returns Encrypted payload.
  */
 export function deserialize(buf: Uint8Array): Encrypted {
+  assert(buf.length >= ECIES_SERIALIZED_MIN_LENGTH, ERROR_ECIES_SERIALIZED_LENGTH);
   const slice0 = LENGTH_0;
   const slice1 = slice0 + IV_LENGTH;
   const slice2 = slice1 + PREFIXED_KEY_LENGTH;

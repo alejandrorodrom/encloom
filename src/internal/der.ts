@@ -24,6 +24,12 @@ function readAsn1Length(
   const b = der[start]!;
   if (b & 0x80) {
     const n = b & 0x7f;
+    if (n === 0 || n > 4) {
+      throw new Error("Invalid DER length encoding");
+    }
+    if (start + 1 + n > der.length) {
+      throw new Error("Truncated DER length");
+    }
     let len = 0;
     for (let i = 0; i < n; i++) {
       len = (len << 8) | der[start + 1 + i]!;

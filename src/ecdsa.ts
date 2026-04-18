@@ -1,6 +1,11 @@
 import { hmac } from "@noble/hashes/hmac.js";
 import { sha256 } from "@noble/hashes/sha2.js";
 import * as secp from "@noble/secp256k1";
+import {
+  ERROR_BAD_SIGNATURE,
+  PREFIXED_DECOMPRESSED_LENGTH,
+  PREFIXED_KEY_LENGTH,
+} from "./constants";
 import { derDecodeEcdsaSignature, derEncodeEcdsaSignature } from "./internal/der";
 import type { KeyPair } from "./helpers/types";
 import {
@@ -33,7 +38,14 @@ export function generatePrivate(): Uint8Array {
  */
 export function compress(publicKey: Uint8Array): Uint8Array {
   if (isCompressed(publicKey)) {
+    checkPublicKey(publicKey);
     return publicKey;
+  }
+  if (
+    publicKey.length === PREFIXED_KEY_LENGTH ||
+    publicKey.length === PREFIXED_DECOMPRESSED_LENGTH
+  ) {
+    checkPublicKey(publicKey);
   }
   return secp.Point.fromBytes(publicKey).toBytes(true);
 }
@@ -45,7 +57,16 @@ export function compress(publicKey: Uint8Array): Uint8Array {
  */
 export function decompress(publicKey: Uint8Array): Uint8Array {
   if (isDecompressed(publicKey)) {
+    if (publicKey.length === PREFIXED_DECOMPRESSED_LENGTH) {
+      checkPublicKey(publicKey);
+    }
     return publicKey;
+  }
+  if (
+    publicKey.length === PREFIXED_KEY_LENGTH ||
+    publicKey.length === PREFIXED_DECOMPRESSED_LENGTH
+  ) {
+    checkPublicKey(publicKey);
   }
   return secp.Point.fromBytes(publicKey).toBytes(false);
 }
@@ -161,6 +182,6 @@ export function verify(
     lowS: false,
   });
   if (!ok) {
-    throw new Error("Bad signature");
+    throw new Error(ERROR_BAD_SIGNATURE);
   }
 }

@@ -46,6 +46,9 @@ export const DECOMPRESSED_LENGTH = LENGTH_64;
 export const PREFIXED_KEY_LENGTH = KEY_LENGTH + PREFIX_LENGTH;
 export const PREFIXED_DECOMPRESSED_LENGTH = DECOMPRESSED_LENGTH + PREFIX_LENGTH;
 
+export const ECIES_SERIALIZED_MIN_LENGTH =
+  IV_LENGTH + PREFIXED_KEY_LENGTH + MAC_LENGTH;
+
 export const MAX_KEY_LENGTH = LENGTH_1024;
 export const PBKDF2_DEFAULT_ITERATIONS = 210_000;
 export const MAX_MSG_LENGTH = LENGTH_32;
@@ -61,8 +64,11 @@ export const EC_GROUP_ORDER = new Uint8Array(
 export const ZERO32 = new Uint8Array(LENGTH_32).fill(LENGTH_0);
 
 export const ERROR_BAD_MAC = "Bad MAC";
+export const ERROR_BAD_SIGNATURE = "Bad signature";
 export const ERROR_BAD_PRIVATE_KEY = "Bad private key";
 export const ERROR_BAD_PUBLIC_KEY = "Bad public key";
+export const ERROR_ECIES_SERIALIZED_LENGTH =
+  "ECIES deserialize: buffer shorter than minimum serialized length";
 
 export const ERROR_EMPTY_MESSAGE = "Message should not be empty";
 export const ERROR_MESSAGE_TOO_LONG = "Message is too long";
