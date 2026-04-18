@@ -1,4 +1,6 @@
-import { pbkdf2 as pbkdf2Node } from "pbkdf2";
+import * as pbkdf2Module from "pbkdf2";
+
+const pbkdf2Node = pbkdf2Module.pbkdf2;
 import { LENGTH_1, KEY_LENGTH, LENGTH_16 } from "./constants";
 import { randomBytes } from "./random";
 

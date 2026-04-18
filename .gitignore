@@ -1,8 +1,9 @@
 # Dependencies
 node_modules/
 
-# Build output (tsup default)
+# Build output
 dist/
+dist-types/
 
 # Tool cache
 .tsup/

@@ -1,4 +1,6 @@
-import { ModeOfOperation } from "aes-js";
+import * as aesJs from "aes-js";
+
+const { ModeOfOperation } = aesJs;
 
 /**
  * Encrypts data using AES-256-CBC.
