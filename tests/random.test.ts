@@ -59,9 +59,6 @@ describe("random", () => {
       );
       let offset = 0;
       vi.spyOn(globalThis.crypto, "getRandomValues").mockImplementation((arr) => {
-        if (!arr) {
-          throw new Error("getRandomValues: missing view");
-        }
         const u8 = new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength);
         for (let i = 0; i < u8.length; i++) {
           u8[i] = tape[offset]!;
