@@ -1,6 +1,6 @@
 {
   "name": "encloom",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "TypeScript/JavaScript cryptographic toolkit: SHA-2 and SHA-3 (incl. Keccak), HMAC, AES-CBC, PBKDF2, secure random, and secp256k1 (ECDSA, ECDH, ECIES). Subpath exports with tree-shaking; APIs use Uint8Array.",
   "engines": {
     "node": ">=20.19.0"
@@ -200,22 +200,54 @@
   },
   "typesVersions": {
     "*": {
-      "helpers/encoding": ["./dist/helpers/encoding.d.ts"],
-      "helpers/byte-conversions": ["./dist/helpers/byte-conversions.d.ts"],
-      "helpers/validators": ["./dist/helpers/validators.d.ts"],
-      "helpers/util": ["./dist/helpers/util.d.ts"],
-      "helpers/types": ["./dist/helpers/types.d.ts"],
-      "helpers": ["./dist/helpers.d.ts"],
-      "constants": ["./dist/constants.d.ts"],
-      "aes": ["./dist/aes.d.ts"],
-      "ecdh": ["./dist/ecdh.d.ts"],
-      "ecdsa": ["./dist/ecdsa.d.ts"],
-      "ecies": ["./dist/ecies.d.ts"],
-      "hmac": ["./dist/hmac.d.ts"],
-      "pbkdf2": ["./dist/pbkdf2.d.ts"],
-      "random": ["./dist/random.d.ts"],
-      "sha2": ["./dist/sha2.d.ts"],
-      "sha3": ["./dist/sha3.d.ts"]
+      "helpers/encoding": [
+        "./dist/helpers/encoding.d.ts"
+      ],
+      "helpers/byte-conversions": [
+        "./dist/helpers/byte-conversions.d.ts"
+      ],
+      "helpers/validators": [
+        "./dist/helpers/validators.d.ts"
+      ],
+      "helpers/util": [
+        "./dist/helpers/util.d.ts"
+      ],
+      "helpers/types": [
+        "./dist/helpers/types.d.ts"
+      ],
+      "helpers": [
+        "./dist/helpers.d.ts"
+      ],
+      "constants": [
+        "./dist/constants.d.ts"
+      ],
+      "aes": [
+        "./dist/aes.d.ts"
+      ],
+      "ecdh": [
+        "./dist/ecdh.d.ts"
+      ],
+      "ecdsa": [
+        "./dist/ecdsa.d.ts"
+      ],
+      "ecies": [
+        "./dist/ecies.d.ts"
+      ],
+      "hmac": [
+        "./dist/hmac.d.ts"
+      ],
+      "pbkdf2": [
+        "./dist/pbkdf2.d.ts"
+      ],
+      "random": [
+        "./dist/random.d.ts"
+      ],
+      "sha2": [
+        "./dist/sha2.d.ts"
+      ],
+      "sha3": [
+        "./dist/sha3.d.ts"
+      ]
     }
   },
   "scripts": {
@@ -264,7 +296,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/aes-js": "^3.1.4",
-    "@types/pbkdf2": "^3.1.2",
+    "@types/node": "^25.6.0",
     "@vitest/coverage-v8": "^4.1.4",
     "esbuild": "^0.28.0",
     "eslint": "^10.2.1",
@@ -277,7 +309,6 @@
   "dependencies": {
     "@noble/hashes": "^2.2.0",
     "@noble/secp256k1": "^3.1.0",
-    "aes-js": "^3.1.2",
-    "pbkdf2": "^3.1.5"
+    "aes-js": "^3.1.2"
   }
 }

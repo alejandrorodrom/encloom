@@ -1,10 +1,11 @@
-import * as pbkdf2Module from "pbkdf2";
 import {
   KEY_LENGTH,
   LENGTH_16,
   PBKDF2_DEFAULT_ITERATIONS,
   PBKDF2_DIGEST_SHA256,
   PBKDF2_DIGEST_SHA512,
+  SHA256_BROWSER_ALGO,
+  SHA512_BROWSER_ALGO,
 } from "./constants";
 import type {
   Pbkdf2Digest,
@@ -16,7 +17,14 @@ import { randomBytes } from "./random";
 
 export type { Pbkdf2Digest, Pbkdf2Options, Pbkdf2Result } from "./helpers/types";
 
-const pbkdf2Node = pbkdf2Module.pbkdf2;
+function getSubtleCrypto(): SubtleCrypto {
+  const cryptoApi = (globalThis as { crypto?: Crypto }).crypto;
+  const subtle = cryptoApi?.subtle;
+  if (subtle === undefined) {
+    throw new Error("PBKDF2: Web Crypto API is not available");
+  }
+  return subtle;
+}
 
 /**
  * Derives a 32-byte key from a password using PBKDF2 with HMAC-SHA-256 or HMAC-SHA-512.
@@ -33,6 +41,8 @@ export async function pbkdf2(
   options?: Pbkdf2Options
 ): Promise<Pbkdf2Result> {
   const salt = options?.salt ?? randomBytes(LENGTH_16);
+  const passwordBytes = Uint8Array.from(password);
+  const saltBytes = Uint8Array.from(salt);
   assert(salt.length > 0, "PBKDF2: salt must not be empty");
   const iterations = options?.iterations ?? PBKDF2_DEFAULT_ITERATIONS;
   assert(
@@ -40,32 +50,34 @@ export async function pbkdf2(
     "PBKDF2: iterations must be a positive integer"
   );
   const digest: Pbkdf2Digest = options?.digest ?? PBKDF2_DIGEST_SHA256;
-  const digestNode =
+  const digestWebCrypto =
     digest === PBKDF2_DIGEST_SHA512 ? PBKDF2_DIGEST_SHA512 : PBKDF2_DIGEST_SHA256;
+  const hash =
+    digestWebCrypto === PBKDF2_DIGEST_SHA512 ? SHA512_BROWSER_ALGO : SHA256_BROWSER_ALGO;
+  const subtle = getSubtleCrypto();
 
-  return new Promise((resolve, reject) => {
-    pbkdf2Node(
-      password,
-      salt,
+  const keyMaterial = await subtle.importKey(
+    "raw",
+    passwordBytes,
+    { name: "PBKDF2" },
+    false,
+    ["deriveBits"]
+  );
+  const derivedBits = await subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      salt: saltBytes,
       iterations,
-      KEY_LENGTH,
-      digestNode,
-      (err: Error | null, derived?: Buffer) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        if (derived === undefined) {
-          reject(new Error("PBKDF2: no derived key"));
-          return;
-        }
-        resolve({
-          key: new Uint8Array(derived),
-          salt,
-          iterations,
-          digest,
-        });
-      }
-    );
-  });
+      hash,
+    },
+    keyMaterial,
+    KEY_LENGTH * 8
+  );
+
+  return {
+    key: new Uint8Array(derivedBits),
+    salt: saltBytes,
+    iterations,
+    digest,
+  };
 }

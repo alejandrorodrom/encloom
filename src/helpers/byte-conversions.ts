@@ -177,10 +177,12 @@ export function isHexString(str: unknown, length?: number): boolean {
  * @returns `false` if `Buffer` is not defined in the environment; otherwise delegates to `Buffer.isBuffer`.
  */
 export function isBuffer(val: unknown): boolean {
-  if (typeof globalThis.Buffer === "undefined") {
+  const bufferCtor = (globalThis as { Buffer?: { isBuffer(value: unknown): boolean } })
+    .Buffer;
+  if (bufferCtor === undefined) {
     return false;
   }
-  return globalThis.Buffer.isBuffer(val);
+  return bufferCtor.isBuffer(val);
 }
 
 /**
