@@ -11,6 +11,7 @@ const ENTRIES = {
   index: "src/index.ts",
   constants: "src/constants.ts",
   aes: "src/aes.ts",
+  "aes-gcm": "src/aes-gcm.ts",
   ecdh: "src/ecdh.ts",
   ecdsa: "src/ecdsa.ts",
   ecies: "src/ecies.ts",
@@ -21,13 +22,20 @@ const ENTRIES = {
   sha3: "src/sha3.ts",
   helpers: "src/helpers/index.ts",
   "helpers/encoding": "src/helpers/encoding.ts",
+  "helpers/hex-to-bytes": "src/helpers/hex-to-bytes.ts",
   "helpers/byte-conversions": "src/helpers/byte-conversions.ts",
   "helpers/validators": "src/helpers/validators.ts",
   "helpers/util": "src/helpers/util.ts",
   "helpers/types": "src/helpers/types.ts",
 };
 
-const EXTERNAL = ["aes-js", "pbkdf2", "@noble/hashes/*", "@noble/secp256k1"];
+const EXTERNAL = [
+  "aes-js",
+  "pbkdf2",
+  "@noble/hashes/*",
+  "@noble/ciphers/*",
+  "@noble/secp256k1",
+];
 
 function distDtsFromEntryKey(key) {
   return key === "helpers" ? "helpers.d.ts" : `${key}.d.ts`;

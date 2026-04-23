@@ -4,6 +4,8 @@ import {
   ripemd160Sync,
   sha256,
   sha256Sync,
+  sha256Utf8Hex,
+  sha256Utf8HexSync,
   sha512,
   sha512Sync,
 } from "../src/sha2.js";
@@ -128,5 +130,12 @@ describe("sha2", () => {
     it("await ripemd160(x)", async () => {
       expect(hexOf(await ripemd160(u8("78")))).toBe("11ff33c6fb942655efb3e30cf4c0fd95f5ef483a");
     });
+  });
+
+  it("sha256Utf8Hex matches SHA-256 of UTF-8 bytes", async () => {
+    const s = "café & secp256k1";
+    const expected = hexOf(sha256Sync(utf8ToBuffer(s)));
+    expect(sha256Utf8HexSync(s)).toBe(expected);
+    expect(await sha256Utf8Hex(s)).toBe(expected);
   });
 });

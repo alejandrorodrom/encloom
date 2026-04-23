@@ -1,3 +1,5 @@
+import { hexToBytes } from "./helpers/hex-to-bytes";
+
 export const HEX_ENC = "hex";
 export const UTF8_ENC = "utf8";
 export const BINARY_ENC = "binary";
@@ -10,6 +12,7 @@ export const VERIFY_OP = "verify";
 
 export const LENGTH_0 = 0;
 export const LENGTH_1 = 1;
+export const LENGTH_12 = 12;
 export const LENGTH_16 = 16;
 export const LENGTH_32 = 32;
 export const LENGTH_64 = 64;
@@ -41,6 +44,8 @@ export const PBKDF2_DIGEST_SHA512 = SHA512_NODE_ALGO;
 export const PREFIX_LENGTH = LENGTH_1;
 export const KEY_LENGTH = LENGTH_32;
 export const IV_LENGTH = LENGTH_16;
+export const AES_GCM_NONCE_LENGTH = LENGTH_12;
+export const AES_GCM_TAG_LENGTH = LENGTH_16;
 export const MAC_LENGTH = LENGTH_32;
 export const DECOMPRESSED_LENGTH = LENGTH_64;
 
@@ -79,12 +84,9 @@ export const ERROR_BAD_EPHEM_PRIVATE_KEY = "Invalid ephemeral private key";
 export const ERROR_AES_IV_LENGTH = "AES-CBC: IV must be 16 bytes";
 export const ERROR_AES_KEY_LENGTH = "AES-CBC: key must be 32 bytes";
 
-/** Parses hex digits to byte values; an odd-length string is treated as if it had a leading `0`. */
-export function hexToBytes(hex: string): number[] {
-  const clean = hex.length % 2 ? `0${hex}` : hex;
-  const out: number[] = [];
-  for (let i = 0; i < clean.length; i += 2) {
-    out.push(Number.parseInt(clean.slice(i, i + 2), 16));
-  }
-  return out;
-}
+export const ERROR_AES_GCM_KEY_LENGTH =
+  "AES-GCM: key must be 16, 24, or 32 bytes";
+export const ERROR_AES_GCM_NONCE_LENGTH =
+  "AES-GCM: nonce must be at least 8 bytes";
+export const ERROR_AES_GCM_CIPHERTEXT_LENGTH =
+  "AES-GCM: ciphertext must be longer than the authentication tag";

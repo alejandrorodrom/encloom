@@ -46,3 +46,9 @@ export interface Pbkdf2Result {
   iterations: number;
   digest: Pbkdf2Digest;
 }
+
+export interface AesGcmJsonWire {
+  iv: string;
+  key: string;
+  stream: string;
+}

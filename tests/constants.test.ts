@@ -22,6 +22,7 @@ import {
   KEY_LENGTH,
   LENGTH_0,
   LENGTH_1,
+  LENGTH_12,
   LENGTH_1024,
   LENGTH_128,
   LENGTH_16,
@@ -44,7 +45,6 @@ import {
   UTF8_ENC,
   VERIFY_OP,
   ZERO32,
-  hexToBytes,
 } from "../src/constants.js";
 
 describe("constants (export snapshot batch 1 / 10)", () => {
@@ -144,6 +144,10 @@ describe("constants (export snapshot batch 3 / 10)", () => {
     expect(LENGTH_1).toBe(1);
   });
 
+  it("LENGTH_12", () => {
+    expect(LENGTH_12).toBe(12);
+  });
+
   it("LENGTH_1024", () => {
     expect(LENGTH_1024).toBe(1024);
   });
@@ -237,24 +241,5 @@ describe("constants (export snapshot batch 5 — records 41–44)", () => {
     expect(Buffer.from(ZERO32).toString("hex")).toBe(
       "0000000000000000000000000000000000000000000000000000000000000000",
     );
-  });
-});
-
-describe("constants hexToBytes", () => {
-  it("prepends one hex digit when the string has odd length", () => {
-    expect(new Uint8Array(hexToBytes("a"))).toEqual(new Uint8Array([0x0a]));
-    expect(new Uint8Array(hexToBytes("0a"))).toEqual(new Uint8Array([0x0a]));
-  });
-
-  it("parses even-length hex without inserting a digit", () => {
-    expect(new Uint8Array(hexToBytes("0f00"))).toEqual(new Uint8Array([0x0f, 0x00]));
-  });
-
-  it("matches EC_GROUP_ORDER for the canonical secp256k1 order hex", () => {
-    expect(
-      new Uint8Array(
-        hexToBytes("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"),
-      ),
-    ).toEqual(EC_GROUP_ORDER);
   });
 });

@@ -1,6 +1,7 @@
 export * from "./constants";
 export * from "./helpers";
 export * from "./aes";
+export * from "./aes-gcm";
 export * from "./ecdh";
 export * from "./ecdsa";
 export * from "./ecies";

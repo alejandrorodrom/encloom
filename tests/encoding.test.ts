@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  aes128StringKeyMaterial,
+  base64UrlToBuffer,
+  bufferToBase64Url,
   bufferToHex,
   bufferToUtf8,
   concatBuffers,
@@ -45,6 +48,36 @@ describe("encoding", () => {
 
   it("hexToNumber", () => {
     expect(hexToNumber("0xff")).toBe(255);
+  });
+
+  describe("aes128StringKeyMaterial", () => {
+    it("accepts 16 ASCII bytes after padEnd", () => {
+      expect(aes128StringKeyMaterial("short")).toEqual(
+        utf8ToBuffer("short           "),
+      );
+    });
+
+    it("throws when padded UTF-8 is not exactly 16 bytes", () => {
+      expect(() => aes128StringKeyMaterial("ñ".repeat(9))).toThrow(
+        /exactly 16 bytes/,
+      );
+    });
+  });
+
+  describe("base64UrlToBuffer", () => {
+    it("rejects length ≡ 1 (mod 4) after url→std alphabet swap", () => {
+      expect(() => base64UrlToBuffer("A")).toThrow(/invalid length/);
+      expect(() => base64UrlToBuffer("AAAAA")).toThrow(/invalid length/);
+    });
+
+    it("round-trips with bufferToBase64Url (unpadded wire)", () => {
+      for (const len of [1, 2, 3, 4, 5, 16]) {
+        const buf = new Uint8Array(len);
+        for (let i = 0; i < len; i++) buf[i] = i * 17 + (len & 0xff);
+        const wire = bufferToBase64Url(buf);
+        expect(base64UrlToBuffer(wire)).toEqual(buf);
+      }
+    });
   });
 
   describe("known-answer encoding helpers", () => {

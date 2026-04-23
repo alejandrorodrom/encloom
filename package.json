@@ -1,7 +1,7 @@
 {
   "name": "encloom",
-  "version": "1.0.2",
-  "description": "TypeScript/JavaScript cryptographic toolkit: SHA-2 and SHA-3 (incl. Keccak), HMAC, AES-CBC, PBKDF2, secure random, and secp256k1 (ECDSA, ECDH, ECIES). Subpath exports with tree-shaking; APIs use Uint8Array.",
+  "version": "2.0.0",
+  "description": "TypeScript/JavaScript cryptographic toolkit: SHA-2 and SHA-3 (incl. Keccak), HMAC, AES-CBC, AES-GCM, PBKDF2, secure random, and secp256k1 (ECDSA, ECDH, ECIES). Subpath exports with tree-shaking; APIs use Uint8Array.",
   "engines": {
     "node": ">=20.19.0"
   },
@@ -52,6 +52,17 @@
       "require": {
         "types": "./dist/helpers/encoding.d.ts",
         "default": "./dist/helpers/encoding.js"
+      }
+    },
+    "./helpers/hex-to-bytes": {
+      "types": "./dist/helpers/hex-to-bytes.d.ts",
+      "import": {
+        "types": "./dist/helpers/hex-to-bytes.d.mts",
+        "default": "./dist/helpers/hex-to-bytes.mjs"
+      },
+      "require": {
+        "types": "./dist/helpers/hex-to-bytes.d.ts",
+        "default": "./dist/helpers/hex-to-bytes.js"
       }
     },
     "./helpers/byte-conversions": {
@@ -107,6 +118,17 @@
       "require": {
         "types": "./dist/aes.d.ts",
         "default": "./dist/aes.js"
+      }
+    },
+    "./aes-gcm": {
+      "types": "./dist/aes-gcm.d.ts",
+      "import": {
+        "types": "./dist/aes-gcm.d.mts",
+        "default": "./dist/aes-gcm.mjs"
+      },
+      "require": {
+        "types": "./dist/aes-gcm.d.ts",
+        "default": "./dist/aes-gcm.js"
       }
     },
     "./ecdh": {
@@ -203,6 +225,9 @@
       "helpers/encoding": [
         "./dist/helpers/encoding.d.ts"
       ],
+      "helpers/hex-to-bytes": [
+        "./dist/helpers/hex-to-bytes.d.ts"
+      ],
       "helpers/byte-conversions": [
         "./dist/helpers/byte-conversions.d.ts"
       ],
@@ -223,6 +248,9 @@
       ],
       "aes": [
         "./dist/aes.d.ts"
+      ],
+      "aes-gcm": [
+        "./dist/aes-gcm.d.ts"
       ],
       "ecdh": [
         "./dist/ecdh.d.ts"
@@ -269,6 +297,7 @@
     "ecdsa",
     "ecies",
     "aes",
+    "aes-gcm",
     "hmac",
     "pbkdf2",
     "sha256",
@@ -307,6 +336,7 @@
     "vitest": "^4.1.4"
   },
   "dependencies": {
+    "@noble/ciphers": "^2.2.0",
     "@noble/hashes": "^2.2.0",
     "@noble/secp256k1": "^3.1.0",
     "aes-js": "^3.1.2"

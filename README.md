@@ -2,13 +2,17 @@
 
 [![npm version](https://img.shields.io/npm/v/encloom.svg)](https://www.npmjs.com/package/encloom) [![npm downloads](https://img.shields.io/npm/dm/encloom.svg)](https://www.npmjs.com/package/encloom) [![minified](https://img.shields.io/bundlephobia/min/encloom?label=minified&style=flat)](https://bundlephobia.com/package/encloom) [![minified + gzip](https://img.shields.io/bundlephobia/minzip/encloom?label=minified%20%2B%20gzip&style=flat)](https://bundlephobia.com/package/encloom) [![tree shaking](https://img.shields.io/badge/tree%20shaking-supported-brightgreen?style=flat)](https://bundlephobia.com/package/encloom) [![install size](https://packagephobia.com/badge?p=encloom)](https://packagephobia.com/result?p=encloom) [![License: MIT](https://img.shields.io/npm/l/encloom.svg)](https://github.com/alejandrorodrom/encloom/blob/main/LICENSE) [![GitHub stars](https://img.shields.io/github/stars/alejandrorodrom/encloom.svg)](https://github.com/alejandrorodrom/encloom/stargazers) [![CI](https://github.com/alejandrorodrom/encloom/actions/workflows/ci.yml/badge.svg)](https://github.com/alejandrorodrom/encloom/actions/workflows/ci.yml) [![Coverage Status](https://coveralls.io/repos/github/alejandrorodrom/encloom/badge.svg?branch=main)](https://coveralls.io/github/alejandrorodrom/encloom) [![npm audit](https://github.com/alejandrorodrom/encloom/actions/workflows/npm-audit.yml/badge.svg)](https://github.com/alejandrorodrom/encloom/actions/workflows/npm-audit.yml) [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Node](https://img.shields.io/badge/node-%3E%3D20.19.0-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 
-> TypeScript/JavaScript cryptographic toolkit: SHA-2 and SHA-3 (incl. Keccak), HMAC, AES-CBC, PBKDF2, secure random, and secp256k1 (ECDSA, ECDH, ECIES). **Subpath** exports with tree-shaking. Binary I/O uses **`Uint8Array`** (not Node **`Buffer`**, including helper names that say `*Buffer` for enc-utils–style compatibility).
+> TypeScript/JavaScript cryptographic toolkit: SHA-2 and SHA-3 (incl. Keccak), HMAC, AES-CBC, **AES-GCM**, PBKDF2, secure random, and secp256k1 (ECDSA, ECDH, ECIES). **Subpath** exports with tree-shaking. Binary I/O uses **`Uint8Array`** (not Node **`Buffer`**, including helper names that say `*Buffer` for enc-utils–style compatibility).
 
 <h2 id="sec-installation">Installation</h2>
 
 ```bash
 npm install encloom
 ```
+
+<h2 id="sec-changelog">Changelog</h2>
+
+Release notes and **breaking changes** are kept in [**CHANGELOG.md**](CHANGELOG.md). Before upgrading, read the *Breaking changes* section for the target version.
 
 <h2 id="sec-description">Overview</h2>
 
@@ -17,6 +21,7 @@ Subpath entry points: `encloom/<module>`. The package root **`encloom`** re-expo
 <h2 id="sec-contents">Table of contents</h2>
 
 - [Installation](#sec-installation)
+- [Changelog](#sec-changelog)
 - [Overview](#sec-description)
 - [Quick reference](#sec-reference)
 - [Imports](#sec-imports)
@@ -28,6 +33,7 @@ Subpath entry points: `encloom/<module>`. The package root **`encloom`** re-expo
   - [`encloom/sha3`](#mod-encloom-sha3)
   - [`encloom/hmac`](#mod-encloom-hmac)
   - [`encloom/aes`](#mod-encloom-aes)
+  - [`encloom/aes-gcm`](#mod-encloom-aes-gcm)
   - [`encloom/ecdsa`](#mod-encloom-ecdsa)
   - [`encloom/ecdh`](#mod-encloom-ecdh)
   - [`encloom/ecies`](#mod-encloom-ecies)
@@ -35,6 +41,7 @@ Subpath entry points: `encloom/<module>`. The package root **`encloom`** re-expo
   - [`encloom/constants`](#mod-encloom-constants)
   - [`encloom/helpers`](#mod-encloom-helpers)
   - [`helpers/encoding`](#mod-helpers-encoding)
+  - [`helpers/hex-to-bytes`](#mod-helpers-hex-to-bytes)
   - [`helpers/byte-conversions`](#mod-helpers-byte-conversions)
   - [`helpers/validators`](#mod-helpers-validators)
   - [`helpers/util`](#mod-helpers-util)
@@ -50,25 +57,27 @@ Symbols exported per import path (types compile-time only). First column → [Mo
 |-------------|---------|
 | [`encloom`](#sec-imports) | Full public API (aggregate of subpaths). |
 | [`encloom/random`](#mod-encloom-random) | `randomBytes` |
-| [`encloom/sha2`](#mod-encloom-sha2) | `sha256`, `sha256Sync`, `sha512`, `sha512Sync`, `ripemd160`, `ripemd160Sync` |
+| [`encloom/sha2`](#mod-encloom-sha2) | `sha256`, `sha256Sync`, `sha256Utf8Hex`, `sha256Utf8HexSync`, `sha512`, `sha512Sync`, `ripemd160`, `ripemd160Sync` |
 | [`encloom/sha3`](#mod-encloom-sha3) | `sha3`, `keccak256` |
-| [`encloom/hmac`](#mod-encloom-hmac) | `hmacSha256Sign`, `hmacSha256SignSync`, `hmacSha256Verify`, `hmacSha256VerifySync`, `hmacSha512Sign`, `hmacSha512SignSync`, `hmacSha512Verify`, `hmacSha512VerifySync` |
+| [`encloom/hmac`](#mod-encloom-hmac) | `hmacSha256Sign`, `hmacSha256SignSync`, `hmacSha256Verify`, `hmacSha256VerifySync`, `hmacSha512Sign`, `hmacSha512SignSync`, `hmacSha512Verify`, `hmacSha512VerifySync`, `hmacSha256SignUtf8KeyBase64`, `hmacSha256SignUtf8KeyBase64Sync`, `hmacSha256SignJsonUtf8KeyBase64`, `hmacSha256SignJsonUtf8KeyBase64Sync` |
 | [`encloom/aes`](#mod-encloom-aes) | `aesCbcEncrypt`, `aesCbcDecrypt`, `aesCbcEncryptSync`, `aesCbcDecryptSync` |
+| [`encloom/aes-gcm`](#mod-encloom-aes-gcm) | `aesGcmEncrypt`, `aesGcmEncryptSync`, `aesGcmDecrypt`, `aesGcmDecryptSync`, `encryptObjectAes128GcmJsonHex`, `decryptObjectAes128GcmJsonHex`, `encryptJsonAes256Gcm`, `encryptJsonAes256GcmSync`, `decryptJsonAes256Gcm`, `decryptJsonAes256GcmSync` |
 | [`encloom/ecdsa`](#mod-encloom-ecdsa) | `generatePrivate`, `generateKeyPair`, `getPublic`, `getPublicCompressed`, `compress`, `decompress`, `signatureExport`, `sign`, `recover`, `verify` |
 | [`encloom/ecdh`](#mod-encloom-ecdh) | `derive` |
 | [`encloom/ecies`](#mod-encloom-ecies) | `encrypt`, `decrypt`, `encryptSync`, `decryptSync`, `serialize`, `deserialize` |
 | [`encloom/pbkdf2`](#mod-encloom-pbkdf2) | `pbkdf2` |
 | [`encloom/constants`](#mod-encloom-constants) | Constant identifiers: [full list](#mod-constants-list) |
-| [`encloom/helpers`](#mod-encloom-helpers) | Re-exports **`encoding`**, **byte conversions** (enc-utils–style, [list](#mod-helpers-byte-conversions)), **`validators`**, **`util`**, **`types`**. |
-| [`encloom/helpers/encoding`](#mod-helpers-encoding) | `utf8ToBuffer`, `bufferToUtf8`, `concatBuffers`, `bufferToHex`, `hexToBuffer`, `sanitizeHex`, `removeHexLeadingZeros`, `hexToNumber` |
+| [`encloom/helpers`](#mod-encloom-helpers) | Re-exports **`encoding`**, **`hex-to-bytes`**, **byte conversions** (enc-utils–style, [list](#mod-helpers-byte-conversions)), **`validators`**, **`util`**, **`types`**. |
+| [`encloom/helpers/encoding`](#mod-helpers-encoding) | `utf8ToBuffer`, `bufferToUtf8`, `concatBuffers`, `bufferToHex`, `hexToBuffer`, `sanitizeHex`, `removeHexLeadingZeros`, `hexToNumber`, `bufferToBase64`, `base64ToBuffer`, `bufferToBase64Url`, `base64UrlToBuffer`, `aes128StringKeyMaterial` |
+| [`encloom/helpers/hex-to-bytes`](#mod-helpers-hex-to-bytes) | `hexToBytes` (hex digit string → `number[]`; odd length implies a leading zero nibble) |
 | [`encloom/helpers/byte-conversions`](#mod-helpers-byte-conversions) | Enc-utils–style string/byte helpers: [full list and symbol table](#mod-helpers-byte-conversions) (entire `byte-conversions` source is public) |
 | [`encloom/helpers/validators`](#mod-helpers-validators) | `assert`, `isScalar`, `isValidPrivateKey`, `equalConstTime`, `isValidKeyLength`, `checkPrivateKey`, `checkPublicKey`, `checkMessage` |
 | [`encloom/helpers/util`](#mod-helpers-util) | `isCompressed`, `isDecompressed`, `isPrefixed`, `sanitizePublicKey`, `exportRecoveryParam`, `importRecoveryParam`, `splitSignature`, `joinSignature`, `isValidDERSignature`, `sanitizeRSVSignature` |
-| [`encloom/helpers/types`](#mod-helpers-types) | Types: `Encrypted`, `PreEncryptOpts`, `KeyPair`, `Signature`, `SignResult`, `Pbkdf2Digest`, `Pbkdf2Options`, `Pbkdf2Result` |
+| [`encloom/helpers/types`](#mod-helpers-types) | Types: `Encrypted`, `PreEncryptOpts`, `KeyPair`, `Signature`, `SignResult`, `Pbkdf2Digest`, `Pbkdf2Options`, `Pbkdf2Result`, `AesGcmJsonWire` |
 
 <h4 id="mod-constants-list">Exported constants</h4>
 
-`HEX_ENC`, `UTF8_ENC`, `BINARY_ENC`, `ENCRYPT_OP`, `DECRYPT_OP`, `SIGN_OP`, `VERIFY_OP`, `LENGTH_0`, `LENGTH_1`, `LENGTH_16`, `LENGTH_32`, `LENGTH_64`, `LENGTH_128`, `LENGTH_256`, `LENGTH_512`, `LENGTH_1024`, `AES_LENGTH`, `HMAC_LENGTH`, `AES_BROWSER_ALGO`, `HMAC_BROWSER_ALGO`, `HMAC_BROWSER`, `SHA256_BROWSER_ALGO`, `SHA512_BROWSER_ALGO`, `AES_NODE_ALGO`, `HMAC_NODE_ALGO`, `SHA256_NODE_ALGO`, `SHA512_NODE_ALGO`, `RIPEMD160_NODE_ALGO`, `PBKDF2_DIGEST_SHA256`, `PBKDF2_DIGEST_SHA512`, `PREFIX_LENGTH`, `KEY_LENGTH`, `IV_LENGTH`, `MAC_LENGTH`, `DECOMPRESSED_LENGTH`, `PREFIXED_KEY_LENGTH`, `PREFIXED_DECOMPRESSED_LENGTH`, `ECIES_SERIALIZED_MIN_LENGTH`, `MAX_KEY_LENGTH`, `MAX_MSG_LENGTH`, `PBKDF2_DEFAULT_ITERATIONS`, `EMPTY_BUFFER`, `EC_GROUP_ORDER`, `ZERO32`, `ERROR_BAD_MAC`, `ERROR_BAD_SIGNATURE`, `ERROR_BAD_PRIVATE_KEY`, `ERROR_BAD_PUBLIC_KEY`, `ERROR_BAD_EPHEM_PRIVATE_KEY`, `ERROR_ECIES_SERIALIZED_LENGTH`, `ERROR_AES_IV_LENGTH`, `ERROR_AES_KEY_LENGTH`, `ERROR_EMPTY_MESSAGE`, `ERROR_MESSAGE_TOO_LONG`
+`HEX_ENC`, `UTF8_ENC`, `BINARY_ENC`, `ENCRYPT_OP`, `DECRYPT_OP`, `SIGN_OP`, `VERIFY_OP`, `LENGTH_0`, `LENGTH_1`, `LENGTH_12`, `LENGTH_16`, `LENGTH_32`, `LENGTH_64`, `LENGTH_128`, `LENGTH_256`, `LENGTH_512`, `LENGTH_1024`, `AES_LENGTH`, `HMAC_LENGTH`, `AES_BROWSER_ALGO`, `HMAC_BROWSER_ALGO`, `HMAC_BROWSER`, `SHA256_BROWSER_ALGO`, `SHA512_BROWSER_ALGO`, `AES_NODE_ALGO`, `HMAC_NODE_ALGO`, `SHA256_NODE_ALGO`, `SHA512_NODE_ALGO`, `RIPEMD160_NODE_ALGO`, `PBKDF2_DIGEST_SHA256`, `PBKDF2_DIGEST_SHA512`, `PREFIX_LENGTH`, `KEY_LENGTH`, `IV_LENGTH`, `AES_GCM_NONCE_LENGTH`, `AES_GCM_TAG_LENGTH`, `MAC_LENGTH`, `DECOMPRESSED_LENGTH`, `PREFIXED_KEY_LENGTH`, `PREFIXED_DECOMPRESSED_LENGTH`, `ECIES_SERIALIZED_MIN_LENGTH`, `MAX_KEY_LENGTH`, `MAX_MSG_LENGTH`, `PBKDF2_DEFAULT_ITERATIONS`, `EMPTY_BUFFER`, `EC_GROUP_ORDER`, `ZERO32`, `ERROR_BAD_MAC`, `ERROR_BAD_SIGNATURE`, `ERROR_BAD_PRIVATE_KEY`, `ERROR_BAD_PUBLIC_KEY`, `ERROR_BAD_EPHEM_PRIVATE_KEY`, `ERROR_ECIES_SERIALIZED_LENGTH`, `ERROR_AES_IV_LENGTH`, `ERROR_AES_KEY_LENGTH`, `ERROR_AES_GCM_KEY_LENGTH`, `ERROR_AES_GCM_NONCE_LENGTH`, `ERROR_AES_GCM_CIPHERTEXT_LENGTH`, `ERROR_EMPTY_MESSAGE`, `ERROR_MESSAGE_TOO_LONG`
 
 ---
 
@@ -132,16 +141,26 @@ const nonce = randomBytes(32);
 | Function | Input | Output |
 |----------|-------|--------|
 | `sha256` / `sha256Sync` | `msg: Uint8Array` | `Uint8Array` (32 octets) |
+| `sha256Utf8Hex` / `sha256Utf8HexSync` | `str: string` (UTF-8) | Lowercase hex digest (64 characters) |
 | `sha512` / `sha512Sync` | `msg: Uint8Array` | `Uint8Array` (64 octets) |
 | `ripemd160` / `ripemd160Sync` | `msg: Uint8Array` | `Uint8Array` (20 octets) |
 
 **Example**
 
 ```ts
-import { sha256Sync } from "encloom/sha2";
+import { sha256Sync, sha256Utf8HexSync } from "encloom/sha2";
 import { utf8ToBuffer } from "encloom/helpers/encoding";
 
 const digest = sha256Sync(utf8ToBuffer("hello"));
+const hex = sha256Utf8HexSync("hello"); // 64-char lowercase hex, UTF-8 input
+```
+
+**Example (async UTF-8 hex)**
+
+```ts
+import { sha256Utf8Hex } from "encloom/sha2";
+
+const hex = await sha256Utf8Hex("hello"); // same string as sync variant
 ```
 
 <h3 id="mod-encloom-sha3"><code>encloom/sha3</code></h3>
@@ -171,6 +190,8 @@ const h = keccak256(new Uint8Array([1, 2, 3]));
 | `hmacSha256Verify` / `…Sync` | `key`, `msg`, `sig` | `boolean` |
 | `hmacSha512Sign` / `…Sync` | `key`, `msg` | `Uint8Array` |
 | `hmacSha512Verify` / `…Sync` | `key`, `msg`, `sig` | `boolean` |
+| `hmacSha256SignUtf8KeyBase64` / `…Sync` | `keyUtf8: string`, `msg: Uint8Array` | Base64 MAC |
+| `hmacSha256SignJsonUtf8KeyBase64` / `…Sync` | `keyUtf8: string`, `data: unknown` | Base64 MAC over `JSON.stringify(data)` |
 
 **Example**
 
@@ -179,6 +200,41 @@ import { hmacSha256SignSync, hmacSha256VerifySync } from "encloom/hmac";
 
 const tag = hmacSha256SignSync(key, message);
 const ok = hmacSha256VerifySync(key, message, tag);
+```
+
+**Example (UTF-8 string key + JSON body, Base64 tag)**
+
+```ts
+import { hmacSha256SignJsonUtf8KeyBase64Sync } from "encloom/hmac";
+
+const secret = "api-shared-secret";
+const body = { action: "ping", id: 1 };
+const mac = hmacSha256SignJsonUtf8KeyBase64Sync(secret, body);
+```
+
+**Example (async Base64 MAC, UTF-8 string key + message bytes)**
+
+```ts
+import { hmacSha256SignUtf8KeyBase64 } from "encloom/hmac";
+import { utf8ToBuffer } from "encloom/helpers/encoding";
+
+const tag = await hmacSha256SignUtf8KeyBase64("secret", utf8ToBuffer("payload"));
+```
+
+**Example (verify JSON MAC: recompute bytes + `hmacSha256VerifySync`)**
+
+```ts
+import {
+  hmacSha256SignJsonUtf8KeyBase64Sync,
+  hmacSha256VerifySync,
+} from "encloom/hmac";
+import { utf8ToBuffer, base64ToBuffer } from "encloom/helpers/encoding";
+
+const secret = "api-shared-secret";
+const body = { action: "ping", id: 1 };
+const macB64 = hmacSha256SignJsonUtf8KeyBase64Sync(secret, body);
+const msg = utf8ToBuffer(JSON.stringify(body));
+const ok = hmacSha256VerifySync(utf8ToBuffer(secret), msg, base64ToBuffer(macB64));
 ```
 
 <h3 id="mod-encloom-aes"><code>encloom/aes</code></h3>
@@ -200,6 +256,138 @@ const key = randomBytes(32);
 const iv = randomBytes(16);
 const ct = await aesCbcEncrypt(iv, key, new Uint8Array([1, 2, 3]));
 const pt = await aesCbcDecrypt(iv, key, ct);
+```
+
+<h3 id="mod-encloom-aes-gcm"><code>encloom/aes-gcm</code></h3>
+
+**Description.** **AES-GCM** (128-bit tag) via `@noble/ciphers`, Web Crypto–compatible layout (`ciphertext || tag`). Low-level helpers take raw keys (16 / 24 / 32 octets) and nonce (≥ 8 octets; **12** recommended, see `AES_GCM_NONCE_LENGTH`). High-level helpers cover JSON + passphrase (AES-128, hex wire) and JSON + random AES-256 key (Base64 / Base64url envelope).
+
+| Function | Summary |
+|----------|---------|
+| `aesGcmEncrypt` / `aesGcmEncryptSync` | `nonce`, `key`, `plaintext`, optional `aad` → ciphertext with tag |
+| `aesGcmDecrypt` / `aesGcmDecryptSync` | `nonce`, `key`, `ciphertext` (+ optional `aad`) → plaintext |
+| `encryptObjectAes128GcmJsonHex` / `decryptObjectAes128GcmJsonHex` | JSON + passphrase → lowercase hex (12-byte nonce, then ciphertext and 128-bit tag); decrypt returns `unknown` |
+| `encryptJsonAes256Gcm` / `encryptJsonAes256GcmSync` | JSON + random key → `AesGcmJsonWire` |
+| `decryptJsonAes256Gcm` / `decryptJsonAes256GcmSync` | `AesGcmJsonWire` → parsed JSON (`unknown`) |
+
+**Examples**
+
+Raw bytes:
+
+```ts
+import { aesGcmEncryptSync, aesGcmDecryptSync } from "encloom/aes-gcm";
+import { randomBytes } from "encloom/random";
+
+const key = randomBytes(32);
+const nonce = randomBytes(12);
+const ct = aesGcmEncryptSync(nonce, key, new Uint8Array([1, 2, 3]));
+const pt = aesGcmDecryptSync(nonce, key, ct);
+```
+
+UTF-8 text (encode / decode with `helpers/encoding`):
+
+```ts
+import { aesGcmEncryptSync, aesGcmDecryptSync } from "encloom/aes-gcm";
+import { utf8ToBuffer, bufferToUtf8 } from "encloom/helpers/encoding";
+import { randomBytes } from "encloom/random";
+
+const key = randomBytes(32);
+const nonce = randomBytes(12);
+const msg = "Hola desde encloom";
+const ct = aesGcmEncryptSync(nonce, key, utf8ToBuffer(msg));
+const again = bufferToUtf8(aesGcmDecryptSync(nonce, key, ct));
+```
+
+JSON + random AES-256 key (transportable strings; decrypt returns `unknown` — narrow at call site):
+
+```ts
+import {
+  encryptJsonAes256GcmSync,
+  decryptJsonAes256GcmSync,
+} from "encloom/aes-gcm";
+
+const wire = encryptJsonAes256GcmSync({ user: "ana", n: 42 });
+const out = decryptJsonAes256GcmSync(wire) as { user: string; n: number };
+```
+
+JSON + passphrase, AES-128, hex wire (passphrase must satisfy `aes128StringKeyMaterial`, typically ≤16 ASCII chars):
+
+```ts
+import {
+  encryptObjectAes128GcmJsonHex,
+  decryptObjectAes128GcmJsonHex,
+} from "encloom/aes-gcm";
+
+const passphrase = "0123456789abcdef"; // 16 chars → 16 UTF-8 bytes
+const hex = encryptObjectAes128GcmJsonHex({ ok: true }, passphrase);
+const data = decryptObjectAes128GcmJsonHex(hex, passphrase) as { ok: boolean };
+```
+
+AES-128 / AES-192 GCM low-level (16- or 24-octet keys; 32-octet keys as in the first example):
+
+```ts
+import { aesGcmEncryptSync, aesGcmDecryptSync } from "encloom/aes-gcm";
+import { randomBytes } from "encloom/random";
+
+const nonce = randomBytes(12);
+const key128 = randomBytes(16);
+const ct128 = aesGcmEncryptSync(nonce, key128, new Uint8Array([9]));
+aesGcmDecryptSync(nonce, key128, ct128);
+
+const key192 = randomBytes(24);
+const ct192 = aesGcmEncryptSync(nonce, key192, new Uint8Array([10]));
+aesGcmDecryptSync(nonce, key192, ct192);
+```
+
+Optional **AAD** (must match on decrypt):
+
+```ts
+import { aesGcmEncryptSync, aesGcmDecryptSync } from "encloom/aes-gcm";
+import { utf8ToBuffer } from "encloom/helpers/encoding";
+import { randomBytes } from "encloom/random";
+
+const key = randomBytes(32);
+const nonce = randomBytes(12);
+const aad = utf8ToBuffer("v1");
+const pt = utf8ToBuffer("authenticated payload");
+const ct = aesGcmEncryptSync(nonce, key, pt, aad);
+const out = aesGcmDecryptSync(nonce, key, ct, aad);
+```
+
+**Async** low-level (`Promise` wrappers):
+
+```ts
+import { aesGcmEncrypt, aesGcmDecrypt } from "encloom/aes-gcm";
+import { randomBytes } from "encloom/random";
+
+const key = randomBytes(32);
+const nonce = randomBytes(12);
+const ct = await aesGcmEncrypt(nonce, key, new Uint8Array([1, 2]));
+const pt = await aesGcmDecrypt(nonce, key, ct);
+```
+
+**Async** AES-256-GCM + **AAD** (32-octet key; same `aad` on encrypt and decrypt):
+
+```ts
+import { aesGcmEncrypt, aesGcmDecrypt } from "encloom/aes-gcm";
+import { utf8ToBuffer } from "encloom/helpers/encoding";
+import { randomBytes } from "encloom/random";
+
+const key = randomBytes(32);
+const nonce = randomBytes(12);
+const aad = utf8ToBuffer("v1");
+const pt = utf8ToBuffer("secret body");
+const ct = await aesGcmEncrypt(nonce, key, pt, aad);
+const out = await aesGcmDecrypt(nonce, key, ct, aad);
+```
+
+**Async** JSON envelope (`encryptJsonAes256Gcm` / `decryptJsonAes256Gcm`):
+
+```ts
+import { encryptJsonAes256Gcm, decryptJsonAes256Gcm } from "encloom/aes-gcm";
+
+const wire = await encryptJsonAes256Gcm({ x: 1 });
+const data = (await decryptJsonAes256Gcm(wire)) as { x: number };
 ```
 
 <h3 id="mod-encloom-ecdsa"><code>encloom/ecdsa</code></h3>
@@ -311,7 +499,7 @@ import { KEY_LENGTH, MAX_MSG_LENGTH } from "encloom/constants";
 
 <h3 id="mod-encloom-helpers"><code>encloom/helpers</code></h3>
 
-**Description.** Re-exports **`encoding`**, **byte conversions** ([`helpers/byte-conversions`](#mod-helpers-byte-conversions)), **`validators`**, **`util`**, and **`types`**. Subpaths limit the import surface; you can import byte helpers from **`encloom`**, **`encloom/helpers`**, or **`encloom/helpers/byte-conversions`**.
+**Description.** Re-exports **`encoding`**, **`hex-to-bytes`**, **byte conversions** ([`helpers/byte-conversions`](#mod-helpers-byte-conversions)), **`validators`**, **`util`**, and **`types`**. Subpaths limit the import surface; you can import byte helpers from **`encloom`**, **`encloom/helpers`**, or **`encloom/helpers/byte-conversions`**.
 
 <h4 id="mod-helpers-encoding"><code>helpers/encoding</code></h4>
 
@@ -324,6 +512,9 @@ import { KEY_LENGTH, MAX_MSG_LENGTH } from "encloom/constants";
 | `sanitizeHex` | Strip `0x` prefix. |
 | `removeHexLeadingZeros` | Normalize hexadecimal string. |
 | `hexToNumber` | Hexadecimal string to integer. |
+| `bufferToBase64` / `base64ToBuffer` | RFC 4648 Base64 |
+| `bufferToBase64Url` / `base64UrlToBuffer` | Base64url (unpadded encode; decode accepts optional padding) |
+| `aes128StringKeyMaterial` | Passphrase → 16 UTF-8 bytes for AES-128 (throws if not exactly 16) |
 
 **Example**
 
@@ -331,6 +522,20 @@ import { KEY_LENGTH, MAX_MSG_LENGTH } from "encloom/constants";
 import { hexToBuffer, bufferToHex } from "encloom/helpers/encoding";
 
 bufferToHex(hexToBuffer("0xdead"));
+```
+
+<h4 id="mod-helpers-hex-to-bytes"><code>helpers/hex-to-bytes</code></h4>
+
+| Function | Summary |
+|----------|---------|
+| `hexToBytes` | Parse a contiguous hex string into an array of byte values (`0`–`255`); if the string has odd length, a leading `0` nibble is implied (unlike `hexToBuffer`, which rejects odd lengths). |
+
+**Example**
+
+```ts
+import { hexToBytes } from "encloom/helpers/hex-to-bytes";
+
+new Uint8Array(hexToBytes("0a")); // [10]
 ```
 
 <h4 id="mod-helpers-byte-conversions"><code>helpers/byte-conversions</code></h4>
@@ -415,10 +620,10 @@ const { r, s, v } = splitSignature(sig65Bytes);
 
 <h4 id="mod-helpers-types"><code>helpers/types</code></h4>
 
-**Description.** Type-only module: `Encrypted`, `PreEncryptOpts`, `KeyPair`, `Signature`, `Pbkdf2Digest`, `Pbkdf2Options`, `Pbkdf2Result`.
+**Description.** Type-only module: `Encrypted`, `PreEncryptOpts`, `KeyPair`, `Signature`, `SignResult`, `Pbkdf2Digest`, `Pbkdf2Options`, `Pbkdf2Result`, `AesGcmJsonWire`.
 
 **Example**
 
 ```ts
-import type { KeyPair, Encrypted, Pbkdf2Result } from "encloom/helpers/types";
+import type { KeyPair, Encrypted, Pbkdf2Result, AesGcmJsonWire } from "encloom/helpers/types";
 ```

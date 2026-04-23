@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   hmacSha256Sign,
+  hmacSha256SignJsonUtf8KeyBase64,
+  hmacSha256SignJsonUtf8KeyBase64Sync,
   hmacSha256SignSync,
+  hmacSha256SignUtf8KeyBase64,
+  hmacSha256SignUtf8KeyBase64Sync,
   hmacSha256Verify,
   hmacSha256VerifySync,
   hmacSha512Sign,
@@ -9,9 +13,20 @@ import {
   hmacSha512Verify,
   hmacSha512VerifySync,
 } from "../src/hmac.js";
-import { utf8ToBuffer } from "../src/helpers/encoding.js";
+import { bufferToBase64, utf8ToBuffer } from "../src/helpers/encoding.js";
 
 describe("hmac", () => {
+  it("HMAC-SHA256 UTF-8 key Base64 matches raw-key path", async () => {
+    const key = "shared-secret";
+    const data = { x: 1 };
+    const msg = utf8ToBuffer(JSON.stringify(data));
+    const expected = bufferToBase64(hmacSha256SignSync(utf8ToBuffer(key), msg));
+    expect(hmacSha256SignUtf8KeyBase64Sync(key, msg)).toBe(expected);
+    expect(hmacSha256SignJsonUtf8KeyBase64Sync(key, data)).toBe(expected);
+    expect(await hmacSha256SignUtf8KeyBase64(key, msg)).toBe(expected);
+    expect(await hmacSha256SignJsonUtf8KeyBase64(key, data)).toBe(expected);
+  });
+
   it("HMAC-SHA256 accepts valid tag and rejects tampered tag", () => {
     const key = utf8ToBuffer("key");
     const msg = utf8ToBuffer("The quick brown fox jumps over the lazy dog");
