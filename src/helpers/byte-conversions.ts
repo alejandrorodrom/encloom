@@ -240,7 +240,7 @@ export function getType(val: unknown): EncLikeType {
   if (Array.isArray(val)) {
     return TYPE_ARRAY;
   }
-  return typeof val as EncLikeType;
+  return typeof val;
 }
 
 /**
