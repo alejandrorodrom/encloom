@@ -48,6 +48,10 @@ Subpath entry points: `encloom/<module>`. The package root **`encloom`** re-expo
   - [`helpers/validators`](#mod-helpers-validators)
   - [`helpers/util`](#mod-helpers-util)
   - [`helpers/types`](#mod-helpers-types)
+- [Contributing](#contributing)
+- [License](#license)
+- [Support](#support)
+- [Sponsors](#sponsors)
 
 ---
 
@@ -636,3 +640,24 @@ const { r, s, v } = splitSignature(sig65Bytes);
 ```ts
 import type { KeyPair, Encrypted, Pbkdf2Result, AesGcmJsonWire } from "encloom/helpers/types";
 ```
+
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, tests, and PR guidelines.
+
+## License
+
+[MIT](LICENSE) — [Alejandro Rodriguez Romero](https://www.linkedin.com/in/alejandro-rodriguez-romero/) · [Project page](https://www.rodriguezrom.com/libraries/encloom)
+
+## Support
+
+- [Project page](https://www.rodriguezrom.com/libraries/encloom)
+- [GitHub Issues](https://github.com/alejandrorodrom/encloom/issues)
+- Security: [SECURITY.md](SECURITY.md)
+
+## Sponsors
+
+If this project helps you, consider sponsoring:
+
+- [GitHub Sponsors](https://github.com/sponsors/alejandrorodrom)
+- [Ko-fi](https://ko-fi.com/alejandrorodriguezro)

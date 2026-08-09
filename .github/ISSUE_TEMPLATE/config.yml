@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/alejandrorodrom/encloom/blob/main/README.md
+    about: Read the README before opening an issue
+  - name: Security vulnerability
+    url: https://github.com/alejandrorodrom/encloom/security/advisories/new
+    about: Report a security issue privately (see SECURITY.md)
