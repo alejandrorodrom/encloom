@@ -3,7 +3,7 @@ import {
   aesCbcDecryptSync,
   aesCbcEncrypt,
   aesCbcEncryptSync,
-} from "./aes";
+} from "./internal/aes-cbc";
 import { derive } from "./ecdh";
 import { compress, decompress, getPublic } from "./ecdsa";
 import {

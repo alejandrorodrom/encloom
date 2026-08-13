@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.4] - 2026-08-13
+
+### Changed
+
+- **AES-256-CBC** now uses **`@noble/ciphers`** instead of **`aes-js`**. Ciphertext, PKCS#7 padding, and public APIs are unchanged. This removes the CommonJS dependency that Angular flags on `encloom/aes` and `encloom/ecies`.
+- **`encloom/ecies`** uses the shared AES-CBC implementation under `src/internal/` and no longer imports the public `encloom/aes` subpath.
+
+### Removed
+
+- Runtime dependency **`aes-js`** (and devDependency **`@types/aes-js`**).
+
 ## [2.0.3] - 2026-08-09
 
 ### Security

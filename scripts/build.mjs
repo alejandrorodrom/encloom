@@ -30,7 +30,6 @@ const ENTRIES = {
 };
 
 const EXTERNAL = [
-  "aes-js",
   "pbkdf2",
   "@noble/hashes/*",
   "@noble/ciphers/*",

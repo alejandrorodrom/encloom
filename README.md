@@ -245,7 +245,7 @@ const ok = hmacSha256VerifySync(utf8ToBuffer(secret), msg, base64ToBuffer(macB64
 
 <h3 id="mod-encloom-aes"><code>encloom/aes</code></h3>
 
-**Description.** **AES-256-CBC** encryption and decryption with PKCS#7 padding. Key **32** octets, initialization vector **16** octets.
+**Description.** **AES-256-CBC** encryption and decryption with PKCS#7 padding, via `@noble/ciphers`. Key **32** octets, initialization vector **16** octets.
 
 | Function | Input | Output |
 |----------|-------|--------|
