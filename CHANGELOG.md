@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.5] - 2026-11-16
+
+### Security
+
+- **Dependencies (runtime):** bump `@noble/ciphers` **2.2.0** → **2.4.0**, `@noble/hashes` **2.3.0** → **2.4.0**, and `@noble/secp256k1` **3.1.0** → **3.2.0**.
+- **Dev tooling:** bump Vitest / `@vitest/coverage-v8` to **4.1.12** (patched `@vitest/mocker` advisories) and pin `overrides.minimatch` to **≥11.0.1** (DoS via globparts in the `typescript-eslint` tree).
+
+### Changed
+
+- **Dev tooling:** align floors for `eslint` **10.15.0**, `typescript-eslint` **8.72.2**, `globals` **17.14.0**, `@types/node` **26.6.6**, and `esbuild` **0.28.2**. Vitest **5.x** is deferred (requires Node **≥22.12**; CI still uses Node **20**).
+
 ## [2.0.4] - 2026-08-13
 
 ### Changed

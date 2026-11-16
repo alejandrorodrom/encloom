@@ -1,0 +1,205 @@
+HMAC over JSON in TypeScript — why verify fails in production
+
+In the previous post (https://medium.com/@alex98rodriguezromero/buffer-vs-uint8array-in-typescript-crypto-and-why-it-hurts-4f1013e018f5) we treated bytes as Uint8Array and skimmed HMAC for a JSON body. The one-liner looked fine. Then production hit: client signs, server verifies, ok === false with the “same” payload.
+
+This piece is only about that failure mode. HMAC is message authentication (integrity + authenticity with a shared secret). It is not encryption. It does not replace TLS. The examples use encloom (https://www.npmjs.com/package/encloom). The same habits apply with Web Crypto or @noble/hashes.
+
+This is not a compliance guide. It is about bytes on the wire.
+
+
+What HMAC actually signs
+
+HMAC-SHA256 takes a key and a message, both as bytes. The tag is deterministic for that pair. If either side feeds different bytes—different UTF-8 of the secret, different JSON serialization, hex vs Base64 of the tag—verification fails even when humans “see the same JSON.”
+
+[Paste as code block — TypeScript]
+
+import {
+  hmacSha256SignSync,
+  hmacSha256VerifySync,
+} from "encloom/hmac";
+import { utf8ToBuffer, bufferToBase64, base64ToBuffer } from "encloom/helpers/encoding";
+
+const key = utf8ToBuffer("api-shared-secret");
+const msg = utf8ToBuffer('{"action":"ping","id":1}');
+
+const mac = hmacSha256SignSync(key, msg);
+const ok = hmacSha256VerifySync(key, msg, mac);
+
+console.log({ macB64: bufferToBase64(mac), ok });
+
+[End code block]
+
+hmacSha256VerifySync returns a boolean and compares the tag as bytes (equalConstTime). Decode Base64 or hex first and use that API. Do not invent a === on encoded strings.
+
+
+The production bug: re-stringify after parse
+
+A convenience helper signs JSON.stringify(data) for you. That is safe only if the verifier uses the same byte sequence.
+
+This is the trap:
+
+1. Client builds an object, signs JSON.stringify(object) (compact).
+2. The HTTP client, a logger, or the server serializes again—pretty-print, a DTO with an extra field, a different key order.
+3. Verify runs over those new bytes.
+
+JSON.parse of the wire string and JSON.stringify of that object often keeps key order in modern JS. The usual break is a second serialization that is not the wire: JSON.stringify(obj, null, 2), a mapped DTO (receivedAt, stripped undefined), or Unicode escapes (\u0061 vs a). Key order can still bite if something rebuilds the object from scratch.
+
+
+Before — same payload, different bytes → ok === false
+
+[Paste as code block — TypeScript]
+
+import {
+  hmacSha256SignJsonUtf8KeyBase64Sync,
+  hmacSha256VerifySync,
+} from "encloom/hmac";
+import { utf8ToBuffer, base64ToBuffer } from "encloom/helpers/encoding";
+
+const secret = "api-shared-secret";
+const body = { action: "ping", id: 1 };
+
+// Client signs compact JSON.stringify(body)
+const macB64 = hmacSha256SignJsonUtf8KeyBase64Sync(secret, body);
+// MAC over: {"action":"ping","id":1}
+
+// Server (or axios interceptor, or a DTO mapper) serializes again
+const pretty = JSON.stringify(body, null, 2);
+const extraField = JSON.stringify({ ...body, receivedAt: "2026-08-22T00:00:00.000Z" });
+
+const okPretty = hmacSha256VerifySync(
+  utf8ToBuffer(secret),
+  utf8ToBuffer(pretty),
+  base64ToBuffer(macB64)
+);
+const okDto = hmacSha256VerifySync(
+  utf8ToBuffer(secret),
+  utf8ToBuffer(extraField),
+  base64ToBuffer(macB64)
+);
+
+console.log({ okPretty, okDto }); // false, false — same “JSON”, different UTF-8
+
+[End code block]
+
+
+After — sign and verify the wire (preferred)
+
+Agree that the MAC covers the exact request body bytes, not a re-built object.
+
+[Paste as code block — TypeScript]
+
+import {
+  hmacSha256SignUtf8KeyBase64Sync,
+  hmacSha256VerifySync,
+} from "encloom/hmac";
+import { utf8ToBuffer, base64ToBuffer } from "encloom/helpers/encoding";
+
+const secret = "api-shared-secret";
+
+// Client: MAC over the exact string that will be POSTed
+const rawBody = JSON.stringify({ action: "ping", id: 1 });
+const macB64 = hmacSha256SignUtf8KeyBase64Sync(
+  secret,
+  utf8ToBuffer(rawBody)
+);
+
+// POST rawBody with header X-Signature: macB64
+
+// Server: verify the raw body from the framework (before JSON.parse)
+function verifyRequest(rawBody: string, macB64: string): boolean {
+  return hmacSha256VerifySync(
+    utf8ToBuffer(secret),
+    utf8ToBuffer(rawBody),
+    base64ToBuffer(macB64)
+  );
+}
+
+console.log(verifyRequest(rawBody, macB64)); // true
+
+[End code block]
+
+In Express, Fastify, and similar stacks, read the raw body (or a buffered string) before JSON.parse for the MAC path. Parse for business logic after verify succeeds.
+
+Signing only the body is enough to catch tampering of that body. A reused MAC can still be posted to another path. If that matters, put more than the body under the MAC—for example METHOD + path + timestamp + rawBody as one UTF-8 string both sides build the same way—and reject old timestamps.
+
+
+If you must sign objects — canonical JSON
+
+If both sides only have objects, define a canonical form: sorted keys, no extra spaces, UTF-8, and the same number serialization. A minimal sketch:
+
+[Paste as code block — TypeScript]
+
+function canonicalJson(value: unknown): string {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map(canonicalJson).join(",")}]`;
+  }
+  const obj = value as Record<string, unknown>;
+  const keys = Object.keys(obj).sort();
+  return `{${keys
+    .map((k) => `${JSON.stringify(k)}:${canonicalJson(obj[k])}`)
+    .join(",")}}`;
+}
+
+[End code block]
+
+Then HMAC over utf8ToBuffer(canonicalJson(body)) on both sides. Homegrown canonicalization has edge cases (dates, undefined, bigint). Prefer signing the wire when you control the HTTP stack.
+
+
+Encoding checklist
+
+Before debugging crypto, check these mismatches:
+
+• Secret — same UTF-8 bytes (trim; no accidental newline in env vars)
+• Message — raw body or one canonical serializer
+• Tag transport — Base64 or hex; decode before verify
+• Algorithm — HMAC-SHA256 vs SHA512; do not mix
+
+Hex vs Base64 of the same tag are different strings. Both sides must use the same encoding on the wire and decode to Uint8Array before verify.
+
+
+What HMAC does not give you
+
+Confidentiality — anyone who sees the body still reads it. Use TLS; add AES-GCM (or similar) if you need ciphertext at rest or beyond transport.
+
+Non-repudiation — a shared secret means either party can forge tags. For “only this private key signed,” use ECDSA or similar.
+
+Replay protection — a valid MAC can be resent. Bind method, path, and a timestamp (or nonce) into the signed bytes, as above, if that matters.
+
+
+When this pattern fits
+
+Use shared-secret HMAC when client and server (or two backends) already share a secret, you need tamper detection on a payload, and you can pin the exact bytes under the MAC.
+
+Skip it for public clients that cannot hold a secret (use user auth plus server-side checks), or when you need asymmetric proof of origin.
+
+
+Where to go next
+
+Package: https://www.npmjs.com/package/encloom — module encloom/hmac
+Repo: https://github.com/alejandrorodrom/encloom
+Previous post: https://medium.com/@alex98rodriguezromero/buffer-vs-uint8array-in-typescript-crypto-and-why-it-hurts-4f1013e018f5
+(Also on Dev.to: https://dev.to/alejandrorodrom/buffer-vs-uint8array-in-typescript-crypto-and-why-it-hurts-289l)
+
+Related reading: Web Crypto HMAC, RFC 2104.
+
+
+---
+MEDIUM PUBLISHING NOTES (delete before publish)
+
+Title: HMAC over JSON in TypeScript — why verify fails in production
+
+Subtitle (optional): Sign the wire bytes, not a re-stringified object—pretty-print, extra fields, and what belongs under the MAC.
+
+Tags / topics: TypeScript, JavaScript, Cryptography, Nodejs, Software Engineering
+
+How to paste:
+1. Copy section by section into Medium’s editor.
+2. Select each code region and use Medium’s code block (not inline).
+3. Delete the [Paste as code block] / [End code block] marker lines.
+4. Turn section titles into Medium “Heading” style (not # markdown).
+5. “Previous post” points to your Medium #1; optional second link to the Dev.to version.
+6. Prefer one canonical: if Dev.to #2 is published first, set Medium’s Canonical link to that Dev.to URL.
+7. Cover image optional (encloom logo works).
