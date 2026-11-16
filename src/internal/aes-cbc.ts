@@ -35,6 +35,7 @@ export async function aesCbcEncrypt(
 
 /**
  * Decrypts data using AES-256-CBC.
+ * Does not authenticate ciphertexts; prefer AES-GCM or verify a MAC first.
  * @param iv Initialization vector (16 bytes).
  * @param key Encryption key (32 bytes).
  * @param data Ciphertext bytes.
@@ -67,6 +68,8 @@ export function aesCbcEncryptSync(
 
 /**
  * Decrypts data using AES-256-CBC.
+ * Does not authenticate ciphertexts; prefer AES-GCM or verify a MAC first.
+ * Invalid length and invalid PKCS#7 both throw `ERROR_AES_PKCS7_PADDING`.
  * @param iv Initialization vector (16 bytes).
  * @param key Encryption key (32 bytes).
  * @param data Ciphertext bytes.
@@ -78,6 +81,11 @@ export function aesCbcDecryptSync(
   data: Uint8Array
 ): Uint8Array {
   assertAesLengths(iv, key);
+  // Reject non-block lengths with the same public error as bad PKCS#7
+  // (avoids leaking @noble/ciphers' "multiple of 16" message).
+  if (data.length === 0 || data.length % IV_LENGTH !== 0) {
+    throw new Error(ERROR_AES_PKCS7_PADDING);
+  }
   const decrypted = cbc(key, iv, NOBLE_CBC_OPTS).decrypt(data);
   return pkcs7Unpad(decrypted, IV_LENGTH);
 }

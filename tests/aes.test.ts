@@ -125,6 +125,15 @@ describe("aes", () => {
       await expect(aesCbcDecrypt(iv, key, new Uint8Array(0))).rejects.toThrow(ERROR_AES_PKCS7_PADDING);
     });
 
+    it("rejects ciphertext whose length is not a multiple of 16 with the same PKCS#7 error", () => {
+      expect(() => aesCbcDecryptSync(iv, key, new Uint8Array(15))).toThrow(ERROR_AES_PKCS7_PADDING);
+      expect(() => aesCbcDecryptSync(iv, key, new Uint8Array(17))).toThrow(ERROR_AES_PKCS7_PADDING);
+    });
+
+    it("rejects non-block-length ciphertext async with the same PKCS#7 error", async () => {
+      await expect(aesCbcDecrypt(iv, key, new Uint8Array(15))).rejects.toThrow(ERROR_AES_PKCS7_PADDING);
+    });
+
     it("rejects decrypted data with invalid PKCS#7 padding (sync and async)", async () => {
       const pt = new Uint8Array([1, 2, 3]);
       const ct = aesCbcEncryptSync(iv, key, pt);

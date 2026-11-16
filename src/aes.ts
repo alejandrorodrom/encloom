@@ -7,6 +7,7 @@ import {
 
 /**
  * Encrypts data using AES-256-CBC.
+ * Does not authenticate ciphertexts; prefer AES-GCM or encrypt-then-MAC.
  * @param iv Initialization vector (16 bytes).
  * @param key Encryption key (32 bytes).
  * @param data Plaintext bytes.
@@ -22,6 +23,9 @@ export async function aesCbcEncrypt(
 
 /**
  * Decrypts data using AES-256-CBC.
+ * Does not authenticate ciphertexts. Alone, CBC + PKCS#7 can enable
+ * padding-oracle attacks if decrypt errors reach an attacker. Prefer AES-GCM
+ * or verify a MAC before calling this.
  * @param iv Initialization vector (16 bytes).
  * @param key Encryption key (32 bytes).
  * @param data Ciphertext bytes.
@@ -37,6 +41,7 @@ export async function aesCbcDecrypt(
 
 /**
  * Encrypts data using AES-256-CBC.
+ * Does not authenticate ciphertexts; prefer AES-GCM or encrypt-then-MAC.
  * @param iv Initialization vector (16 bytes).
  * @param key Encryption key (32 bytes).
  * @param data Plaintext bytes.
@@ -52,6 +57,9 @@ export function aesCbcEncryptSync(
 
 /**
  * Decrypts data using AES-256-CBC.
+ * Does not authenticate ciphertexts. Alone, CBC + PKCS#7 can enable
+ * padding-oracle attacks if decrypt errors reach an attacker. Prefer AES-GCM
+ * or verify a MAC before calling this.
  * @param iv Initialization vector (16 bytes).
  * @param key Encryption key (32 bytes).
  * @param data Ciphertext bytes.

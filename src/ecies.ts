@@ -91,7 +91,7 @@ function getEciesKeysSync(privateKey: Uint8Array, publicKey: Uint8Array) {
 
 /**
  * Creates an ephemeral key pair for ECIES encryption.
- * @param opts Optional encryption overrides.
+ * @param opts Test-only overrides (`ephemPrivateKey`); never fix in production.
  * @returns Ephemeral private and public key bytes.
  */
 function getEphemKeyPair(opts?: Partial<PreEncryptOpts>) {
@@ -114,7 +114,8 @@ function getEphemKeyPair(opts?: Partial<PreEncryptOpts>) {
  * Encrypts a message with ECIES.
  * @param publicKeyTo Recipient public key bytes.
  * @param msg Plaintext bytes.
- * @param opts Optional encryption overrides.
+ * @param opts Test-only overrides (`iv`, `ephemPrivateKey`). Fixing them makes
+ *   ciphertext deterministic — use only for test vectors, never in production.
  * @returns Encrypted payload.
  */
 export async function encrypt(
@@ -161,7 +162,8 @@ export async function decrypt(
  * Encrypts a message with ECIES using sync primitives.
  * @param publicKeyTo Recipient public key bytes.
  * @param msg Plaintext bytes.
- * @param opts Optional encryption overrides.
+ * @param opts Test-only overrides (`iv`, `ephemPrivateKey`). Fixing them makes
+ *   ciphertext deterministic — use only for test vectors, never in production.
  * @returns Encrypted payload.
  */
 export function encryptSync(

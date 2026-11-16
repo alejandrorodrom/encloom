@@ -5,11 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.7] - 2026-11-16
+
+### Security
+
+- **`encloom/aes`:** ciphertexts whose length is not a multiple of 16 now throw `ERROR_AES_PKCS7_PADDING` instead of `@noble/ciphers`' `"ciphertext must be multiple of 16"`, so decrypt failures share one public message.
+- **Docs (JSDoc):** `aesCbcDecrypt` / `aesCbcDecryptSync` warn that CBC is unauthenticated; `encrypt` / `encryptSync` `@param opts` mark `iv` / `ephemPrivateKey` as test-vector only.
+
+### Changed
+
+- **Error message:** `PKCS#7: empty data` (pre-2.0.6) is gone; empty and invalid padding both use `PKCS#7: invalid padding` (`ERROR_AES_PKCS7_PADDING`). Call sites that matched the old string need updating.
+
 ## [2.0.6] - 2026-11-16
 
 ### Security
 
-- **`encloom/aes`:** PKCS#7 unpad uses a single error (`ERROR_AES_PKCS7_PADDING`) and checks padding without early exits on byte mismatches, reducing distinguishable padding failures when CBC is used without a MAC.
+- **`encloom/aes`:** PKCS#7 unpad uses a single error (`ERROR_AES_PKCS7_PADDING`) and checks padding without early exits on byte mismatches, reducing distinguishable padding failures when CBC is used without a MAC. Replaces the previous `PKCS#7: empty data` message for zero-length ciphertext.
 - **Docs:** warn that `encloom/aes` does not authenticate; prefer AES-GCM or encrypt-then-MAC. Mark ECIES `iv` / `ephemPrivateKey` overrides as test-vector only.
 
 ### Changed

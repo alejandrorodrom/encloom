@@ -49,7 +49,9 @@ export function isValidPrivateKey(privateKey: Uint8Array): boolean {
 }
 
 /**
- * Compares two byte arrays lexicographically.
+ * Compares two byte arrays lexicographically (not constant-time; early exit).
+ * Used only for private-key range checks against fixed bounds, not for MACs
+ * (`equalConstTime` is used for MAC verification).
  * @param a First byte array.
  * @param b Second byte array.
  * @returns -1, 0, or 1 depending on comparison result.
