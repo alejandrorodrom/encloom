@@ -8,7 +8,7 @@ import {
   deserialize,
   serialize,
 } from "../src/ecies.js";
-import { generateKeyPair, getPublic } from "../src/ecdsa.js";
+import { compress, generateKeyPair, getPublic } from "../src/ecdsa.js";
 import { utf8ToBuffer } from "../src/helpers/encoding.js";
 import * as randomMod from "../src/random.js";
 
@@ -199,6 +199,29 @@ describe("ecies", () => {
         ERROR_BAD_EPHEM_PRIVATE_KEY,
       );
     });
+  });
+
+  it("decrypt accepts compressed ephemeral public key (normalizes before MAC)", () => {
+    const { privateKey, publicKey } = generateKeyPair();
+    const msg = utf8ToBuffer("compressed-ephem");
+    const enc = encryptSync(publicKey, msg);
+    const withCompressed = {
+      ...enc,
+      ephemPublicKey: compress(enc.ephemPublicKey),
+    };
+    expect(withCompressed.ephemPublicKey.length).toBe(33);
+    expect(decryptSync(privateKey, withCompressed)).toEqual(msg);
+  });
+
+  it("decrypt async accepts compressed ephemeral public key", async () => {
+    const { privateKey, publicKey } = generateKeyPair();
+    const msg = utf8ToBuffer("compressed-ephem-async");
+    const enc = await encrypt(publicKey, msg);
+    const withCompressed = {
+      ...enc,
+      ephemPublicKey: compress(enc.ephemPublicKey),
+    };
+    expect(await decrypt(privateKey, withCompressed)).toEqual(msg);
   });
 
   describe("ecies coverage batch 21", () => {

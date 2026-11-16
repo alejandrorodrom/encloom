@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.6] - 2026-11-16
+
+### Security
+
+- **`encloom/aes`:** PKCS#7 unpad uses a single error (`ERROR_AES_PKCS7_PADDING`) and checks padding without early exits on byte mismatches, reducing distinguishable padding failures when CBC is used without a MAC.
+- **Docs:** warn that `encloom/aes` does not authenticate; prefer AES-GCM or encrypt-then-MAC. Mark ECIES `iv` / `ephemPrivateKey` overrides as test-vector only.
+
+### Changed
+
+- **`encloom/ecies`:** `decrypt` / `decryptSync` normalize `ephemPublicKey` to uncompressed before the MAC check, so a compressed ephemeral key no longer yields a spurious Bad MAC.
+- **Docs:** document ECIES legacy KDF (`SHA-512` of ECDH secret), MAC input (`IV ‖ E₆₅ ‖ C`), and wire layout (`IV ‖ E₃₃ ‖ MAC ‖ C`).
+
 ## [2.0.5] - 2026-11-16
 
 ### Security

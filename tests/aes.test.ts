@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   ERROR_AES_IV_LENGTH,
   ERROR_AES_KEY_LENGTH,
+  ERROR_AES_PKCS7_PADDING,
   IV_LENGTH,
   KEY_LENGTH,
 } from "../src/constants.js";
@@ -117,11 +118,11 @@ describe("aes", () => {
     });
 
     it("rejects empty ciphertext (PKCS#7 cannot unpad zero-length)", () => {
-      expect(() => aesCbcDecryptSync(iv, key, new Uint8Array(0))).toThrow("PKCS#7: empty data");
+      expect(() => aesCbcDecryptSync(iv, key, new Uint8Array(0))).toThrow(ERROR_AES_PKCS7_PADDING);
     });
 
     it("rejects empty ciphertext async", async () => {
-      await expect(aesCbcDecrypt(iv, key, new Uint8Array(0))).rejects.toThrow("PKCS#7: empty data");
+      await expect(aesCbcDecrypt(iv, key, new Uint8Array(0))).rejects.toThrow(ERROR_AES_PKCS7_PADDING);
     });
 
     it("rejects decrypted data with invalid PKCS#7 padding (sync and async)", async () => {
@@ -129,8 +130,8 @@ describe("aes", () => {
       const ct = aesCbcEncryptSync(iv, key, pt);
       const tampered = new Uint8Array(ct);
       tampered[tampered.length - 1] ^= 0xff;
-      expect(() => aesCbcDecryptSync(iv, key, tampered)).toThrow(/PKCS#7/);
-      await expect(aesCbcDecrypt(iv, key, tampered)).rejects.toThrow(/PKCS#7/);
+      expect(() => aesCbcDecryptSync(iv, key, tampered)).toThrow(ERROR_AES_PKCS7_PADDING);
+      await expect(aesCbcDecrypt(iv, key, tampered)).rejects.toThrow(ERROR_AES_PKCS7_PADDING);
     });
 
     it("rejects PKCS#7 when padding length byte is out of range", () => {
@@ -138,7 +139,7 @@ describe("aes", () => {
       const ct = aesCbcEncryptSync(iv, key, pt);
       const bad = new Uint8Array(ct);
       bad[bad.length - 1] = 17;
-      expect(() => aesCbcDecryptSync(iv, key, bad)).toThrow(/PKCS#7/);
+      expect(() => aesCbcDecryptSync(iv, key, bad)).toThrow(ERROR_AES_PKCS7_PADDING);
     });
   });
 });

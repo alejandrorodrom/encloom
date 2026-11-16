@@ -2,6 +2,7 @@ import { cbc } from "@noble/ciphers/aes.js";
 import {
   ERROR_AES_IV_LENGTH,
   ERROR_AES_KEY_LENGTH,
+  ERROR_AES_PKCS7_PADDING,
   IV_LENGTH,
   KEY_LENGTH,
 } from "../constants";
@@ -102,19 +103,23 @@ function pkcs7Pad(data: Uint8Array, blockSize: number): Uint8Array {
  * @throws Error if padding is invalid.
  */
 function pkcs7Unpad(data: Uint8Array, blockSize: number): Uint8Array {
-  const padByte =
-    data.length === 0 ? undefined : data[data.length - 1];
-  if (padByte === undefined) {
-    throw new Error("PKCS#7: empty data");
+  const pad = data.at(-1);
+  if (pad === undefined) {
+    throw new Error(ERROR_AES_PKCS7_PADDING);
   }
-  const pad = padByte;
-  if (pad < 1 || pad > blockSize || pad > data.length) {
-    throw new Error("PKCS#7: invalid padding");
+  let bad = 0;
+  bad |= pad < 1 ? 1 : 0;
+  bad |= pad > blockSize ? 1 : 0;
+  bad |= pad > data.length ? 1 : 0;
+  for (let i = 0; i < blockSize; i++) {
+    const idx = data.length - 1 - i;
+    const inPad = i < pad ? 1 : 0;
+    const byte = data[idx] ?? 0;
+    const mismatch = byte !== pad ? 1 : 0;
+    bad |= inPad & mismatch;
   }
-  for (let i = data.length - pad; i < data.length; i++) {
-    if (data[i] !== pad) {
-      throw new Error("PKCS#7: invalid padding");
-    }
+  if (bad !== 0) {
+    throw new Error(ERROR_AES_PKCS7_PADDING);
   }
   return data.slice(0, data.length - pad);
 }

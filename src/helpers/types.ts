@@ -10,6 +10,10 @@ export interface Encrypted {
   mac: Uint8Array;
 }
 
+/**
+ * Optional overrides for `encrypt` / `encryptSync`.
+ * Fixing `iv` or `ephemPrivateKey` is for test vectors only (deterministic ciphertext).
+ */
 export interface PreEncryptOpts extends Encrypted {
   ephemPrivateKey: Uint8Array;
 }

@@ -136,6 +136,7 @@ export async function encrypt(
 
 /**
  * Decrypts an ECIES payload.
+ * Normalizes `ephemPublicKey` to uncompressed before the MAC check.
  * @param privateKey Recipient private key bytes.
  * @param opts Encrypted payload.
  * @returns Decrypted plaintext bytes.
@@ -144,7 +145,8 @@ export async function decrypt(
   privateKey: Uint8Array,
   opts: Encrypted
 ): Promise<Uint8Array> {
-  const { ephemPublicKey, iv, mac, ciphertext } = opts;
+  const { iv, mac, ciphertext } = opts;
+  const ephemPublicKey = decompress(opts.ephemPublicKey);
   const { encryptionKey, macKey } = await getEciesKeys(
     privateKey,
     ephemPublicKey
@@ -181,6 +183,7 @@ export function encryptSync(
 
 /**
  * Decrypts an ECIES payload using sync primitives.
+ * Normalizes `ephemPublicKey` to uncompressed before the MAC check.
  * @param privateKey Recipient private key bytes.
  * @param opts Encrypted payload.
  * @returns Decrypted plaintext bytes.
@@ -189,7 +192,8 @@ export function decryptSync(
   privateKey: Uint8Array,
   opts: Encrypted
 ): Uint8Array {
-  const { ephemPublicKey, iv, mac, ciphertext } = opts;
+  const { iv, mac, ciphertext } = opts;
+  const ephemPublicKey = decompress(opts.ephemPublicKey);
   const { encryptionKey, macKey } = getEciesKeysSync(
     privateKey,
     ephemPublicKey

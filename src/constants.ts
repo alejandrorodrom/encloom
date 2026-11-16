@@ -84,6 +84,7 @@ export const ERROR_BAD_EPHEM_PRIVATE_KEY = "Invalid ephemeral private key";
 
 export const ERROR_AES_IV_LENGTH = "AES-CBC: IV must be 16 bytes";
 export const ERROR_AES_KEY_LENGTH = "AES-CBC: key must be 32 bytes";
+export const ERROR_AES_PKCS7_PADDING = "PKCS#7: invalid padding";
 
 export const ERROR_AES_GCM_KEY_LENGTH =
   "AES-GCM: key must be 16, 24, or 32 bytes";

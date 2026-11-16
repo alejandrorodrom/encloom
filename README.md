@@ -83,7 +83,7 @@ Symbols exported per import path (types compile-time only). First column → [Mo
 
 <h4 id="mod-constants-list">Exported constants</h4>
 
-`HEX_ENC`, `UTF8_ENC`, `BINARY_ENC`, `ENCRYPT_OP`, `DECRYPT_OP`, `SIGN_OP`, `VERIFY_OP`, `LENGTH_0`, `LENGTH_1`, `LENGTH_12`, `LENGTH_16`, `LENGTH_32`, `LENGTH_64`, `LENGTH_128`, `LENGTH_256`, `LENGTH_512`, `LENGTH_1024`, `AES_LENGTH`, `HMAC_LENGTH`, `AES_BROWSER_ALGO`, `HMAC_BROWSER_ALGO`, `HMAC_BROWSER`, `SHA256_BROWSER_ALGO`, `SHA512_BROWSER_ALGO`, `AES_NODE_ALGO`, `HMAC_NODE_ALGO`, `SHA256_NODE_ALGO`, `SHA512_NODE_ALGO`, `RIPEMD160_NODE_ALGO`, `PBKDF2_DIGEST_SHA256`, `PBKDF2_DIGEST_SHA512`, `PREFIX_LENGTH`, `KEY_LENGTH`, `IV_LENGTH`, `AES_GCM_NONCE_LENGTH`, `AES_GCM_ENVELOPE_NONCE_MAX_LENGTH`, `AES_GCM_TAG_LENGTH`, `MAC_LENGTH`, `DECOMPRESSED_LENGTH`, `PREFIXED_KEY_LENGTH`, `PREFIXED_DECOMPRESSED_LENGTH`, `ECIES_SERIALIZED_MIN_LENGTH`, `MAX_KEY_LENGTH`, `MAX_MSG_LENGTH`, `PBKDF2_DEFAULT_ITERATIONS`, `EMPTY_BUFFER`, `EC_GROUP_ORDER`, `ZERO32`, `ERROR_BAD_MAC`, `ERROR_BAD_SIGNATURE`, `ERROR_BAD_PRIVATE_KEY`, `ERROR_BAD_PUBLIC_KEY`, `ERROR_BAD_EPHEM_PRIVATE_KEY`, `ERROR_ECIES_SERIALIZED_LENGTH`, `ERROR_AES_IV_LENGTH`, `ERROR_AES_KEY_LENGTH`, `ERROR_AES_GCM_KEY_LENGTH`, `ERROR_AES_GCM_NONCE_LENGTH`, `ERROR_AES_GCM_CIPHERTEXT_LENGTH`, `ERROR_EMPTY_MESSAGE`, `ERROR_MESSAGE_TOO_LONG`
+`HEX_ENC`, `UTF8_ENC`, `BINARY_ENC`, `ENCRYPT_OP`, `DECRYPT_OP`, `SIGN_OP`, `VERIFY_OP`, `LENGTH_0`, `LENGTH_1`, `LENGTH_12`, `LENGTH_16`, `LENGTH_32`, `LENGTH_64`, `LENGTH_128`, `LENGTH_256`, `LENGTH_512`, `LENGTH_1024`, `AES_LENGTH`, `HMAC_LENGTH`, `AES_BROWSER_ALGO`, `HMAC_BROWSER_ALGO`, `HMAC_BROWSER`, `SHA256_BROWSER_ALGO`, `SHA512_BROWSER_ALGO`, `AES_NODE_ALGO`, `HMAC_NODE_ALGO`, `SHA256_NODE_ALGO`, `SHA512_NODE_ALGO`, `RIPEMD160_NODE_ALGO`, `PBKDF2_DIGEST_SHA256`, `PBKDF2_DIGEST_SHA512`, `PREFIX_LENGTH`, `KEY_LENGTH`, `IV_LENGTH`, `AES_GCM_NONCE_LENGTH`, `AES_GCM_ENVELOPE_NONCE_MAX_LENGTH`, `AES_GCM_TAG_LENGTH`, `MAC_LENGTH`, `DECOMPRESSED_LENGTH`, `PREFIXED_KEY_LENGTH`, `PREFIXED_DECOMPRESSED_LENGTH`, `ECIES_SERIALIZED_MIN_LENGTH`, `MAX_KEY_LENGTH`, `MAX_MSG_LENGTH`, `PBKDF2_DEFAULT_ITERATIONS`, `EMPTY_BUFFER`, `EC_GROUP_ORDER`, `ZERO32`, `ERROR_BAD_MAC`, `ERROR_BAD_SIGNATURE`, `ERROR_BAD_PRIVATE_KEY`, `ERROR_BAD_PUBLIC_KEY`, `ERROR_BAD_EPHEM_PRIVATE_KEY`, `ERROR_ECIES_SERIALIZED_LENGTH`, `ERROR_AES_IV_LENGTH`, `ERROR_AES_KEY_LENGTH`, `ERROR_AES_PKCS7_PADDING`, `ERROR_AES_GCM_KEY_LENGTH`, `ERROR_AES_GCM_NONCE_LENGTH`, `ERROR_AES_GCM_CIPHERTEXT_LENGTH`, `ERROR_EMPTY_MESSAGE`, `ERROR_MESSAGE_TOO_LONG`
 
 ---
 
@@ -246,6 +246,8 @@ const ok = hmacSha256VerifySync(utf8ToBuffer(secret), msg, base64ToBuffer(macB64
 <h3 id="mod-encloom-aes"><code>encloom/aes</code></h3>
 
 **Description.** **AES-256-CBC** encryption and decryption with PKCS#7 padding, via `@noble/ciphers`. Key **32** octets, initialization vector **16** octets.
+
+**Warning.** This module does **not** authenticate ciphertexts. Alone, CBC + PKCS#7 can enable padding-oracle attacks if decrypt errors reach an attacker. Prefer [`encloom/aes-gcm`](#mod-encloom-aes-gcm), or apply HMAC (encrypt-then-MAC) and verify before decrypting. ECIES already MACs before AES-CBC decrypt.
 
 | Function | Input | Output |
 |----------|-------|--------|
@@ -453,7 +455,15 @@ const shared = derive(a.privateKey, b.publicKey);
 
 <h3 id="mod-encloom-ecies"><code>encloom/ecies</code></h3>
 
-**Description.** **ECIES** on secp256k1: encrypt to recipient public key; decrypt with private key. Wire format: `serialize` / `deserialize`. `encrypt` / `encryptSync` accept optional `Partial<PreEncryptOpts>` (`iv`, `ephemPrivateKey`, etc.).
+**Description.** **ECIES** on secp256k1: encrypt to recipient public key; decrypt with private key. Wire format: `serialize` / `deserialize`.
+
+**Key derivation (legacy).** Shared secret → `SHA-512` → encryption key (first 32 octets) + MAC key (last 32). No HKDF/`info` context; kept for wire compatibility (a future major could move to HKDF or HPKE).
+
+**MAC input.** HMAC-SHA-256 over `IV ‖ ephemPublicKey (uncompressed, 65 octets) ‖ ciphertext`. Decrypt normalizes a compressed ephemeral key to uncompressed before the MAC check.
+
+**Wire (`serialize`).** `IV (16) ‖ ephemPublicKey compressed (33) ‖ MAC (32) ‖ ciphertext`. Note the wire stores the ephemeral key compressed and places the MAC before the ciphertext; the MAC itself still covers the uncompressed key as above.
+
+**Test-only overrides.** `encrypt` / `encryptSync` accept optional `Partial<PreEncryptOpts>` (`iv`, `ephemPrivateKey`). Fixing them makes encryption deterministic — **use only for test vectors**, never in production.
 
 | Function | Summary |
 |----------|---------|
