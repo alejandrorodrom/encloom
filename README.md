@@ -71,7 +71,7 @@ Symbols exported per import path (types compile-time only). First column → [Mo
 | [`encloom/ecdsa`](#mod-encloom-ecdsa) | `generatePrivate`, `generateKeyPair`, `getPublic`, `getPublicCompressed`, `compress`, `decompress`, `signatureExport`, `sign`, `recover`, `verify` |
 | [`encloom/ecdh`](#mod-encloom-ecdh) | `derive` |
 | [`encloom/ecies`](#mod-encloom-ecies) | `encrypt`, `decrypt`, `encryptSync`, `decryptSync`, `serialize`, `deserialize` |
-| [`encloom/pbkdf2`](#mod-encloom-pbkdf2) | `pbkdf2` |
+| [`encloom/pbkdf2`](#mod-encloom-pbkdf2) | `pbkdf2`, `pbkdf2Sync` |
 | [`encloom/constants`](#mod-encloom-constants) | Constant identifiers: [full list](#mod-constants-list) |
 | [`encloom/helpers`](#mod-encloom-helpers) | Re-exports **`encoding`**, **`hex-to-bytes`**, **byte conversions** (enc-utils–style, [list](#mod-helpers-byte-conversions)), **`validators`**, **`util`**, **`types`**. |
 | [`encloom/helpers/encoding`](#mod-helpers-encoding) | `utf8ToBuffer`, `bufferToUtf8`, `concatBuffers`, `bufferToHex`, `hexToBuffer`, `sanitizeHex`, `removeHexLeadingZeros`, `hexToNumber`, `bufferToBase64`, `base64ToBuffer`, `bufferToBase64Url`, `base64UrlToBuffer`, `aes128StringKeyMaterial` |
@@ -83,7 +83,7 @@ Symbols exported per import path (types compile-time only). First column → [Mo
 
 <h4 id="mod-constants-list">Exported constants</h4>
 
-`HEX_ENC`, `UTF8_ENC`, `BINARY_ENC`, `ENCRYPT_OP`, `DECRYPT_OP`, `SIGN_OP`, `VERIFY_OP`, `LENGTH_0`, `LENGTH_1`, `LENGTH_12`, `LENGTH_16`, `LENGTH_32`, `LENGTH_64`, `LENGTH_128`, `LENGTH_256`, `LENGTH_512`, `LENGTH_1024`, `AES_LENGTH`, `HMAC_LENGTH`, `AES_BROWSER_ALGO`, `HMAC_BROWSER_ALGO`, `HMAC_BROWSER`, `SHA256_BROWSER_ALGO`, `SHA512_BROWSER_ALGO`, `AES_NODE_ALGO`, `HMAC_NODE_ALGO`, `SHA256_NODE_ALGO`, `SHA512_NODE_ALGO`, `RIPEMD160_NODE_ALGO`, `PBKDF2_DIGEST_SHA256`, `PBKDF2_DIGEST_SHA512`, `PREFIX_LENGTH`, `KEY_LENGTH`, `IV_LENGTH`, `AES_GCM_NONCE_LENGTH`, `AES_GCM_ENVELOPE_NONCE_MAX_LENGTH`, `AES_GCM_TAG_LENGTH`, `MAC_LENGTH`, `DECOMPRESSED_LENGTH`, `PREFIXED_KEY_LENGTH`, `PREFIXED_DECOMPRESSED_LENGTH`, `ECIES_SERIALIZED_MIN_LENGTH`, `MAX_KEY_LENGTH`, `MAX_MSG_LENGTH`, `PBKDF2_DEFAULT_ITERATIONS`, `EMPTY_BUFFER`, `EC_GROUP_ORDER`, `ZERO32`, `ERROR_BAD_MAC`, `ERROR_BAD_SIGNATURE`, `ERROR_BAD_PRIVATE_KEY`, `ERROR_BAD_PUBLIC_KEY`, `ERROR_BAD_EPHEM_PRIVATE_KEY`, `ERROR_ECIES_SERIALIZED_LENGTH`, `ERROR_AES_IV_LENGTH`, `ERROR_AES_KEY_LENGTH`, `ERROR_AES_PKCS7_PADDING`, `ERROR_AES_GCM_KEY_LENGTH`, `ERROR_AES_GCM_NONCE_LENGTH`, `ERROR_AES_GCM_CIPHERTEXT_LENGTH`, `ERROR_EMPTY_MESSAGE`, `ERROR_MESSAGE_TOO_LONG`
+`HEX_ENC`, `UTF8_ENC`, `BINARY_ENC`, `ENCRYPT_OP`, `DECRYPT_OP`, `SIGN_OP`, `VERIFY_OP`, `LENGTH_0`, `LENGTH_1`, `LENGTH_12`, `LENGTH_16`, `LENGTH_32`, `LENGTH_64`, `LENGTH_128`, `LENGTH_256`, `LENGTH_512`, `LENGTH_1024`, `AES_LENGTH`, `HMAC_LENGTH`, `AES_BROWSER_ALGO`, `HMAC_BROWSER_ALGO`, `HMAC_BROWSER`, `SHA256_BROWSER_ALGO`, `SHA512_BROWSER_ALGO`, `AES_NODE_ALGO`, `HMAC_NODE_ALGO`, `SHA256_NODE_ALGO`, `SHA512_NODE_ALGO`, `RIPEMD160_NODE_ALGO`, `PBKDF2_DIGEST_SHA256`, `PBKDF2_DIGEST_SHA512`, `PREFIX_LENGTH`, `KEY_LENGTH`, `IV_LENGTH`, `AES_GCM_NONCE_LENGTH`, `AES_GCM_ENVELOPE_NONCE_MAX_LENGTH`, `AES_GCM_TAG_LENGTH`, `MAC_LENGTH`, `DECOMPRESSED_LENGTH`, `PREFIXED_KEY_LENGTH`, `PREFIXED_DECOMPRESSED_LENGTH`, `ECIES_SERIALIZED_MIN_LENGTH`, `MAX_KEY_LENGTH`, `MAX_MSG_LENGTH`, `PBKDF2_DEFAULT_ITERATIONS`, `PBKDF2_DEFAULT_ITERATIONS_SHA512`, `EMPTY_BUFFER`, `EC_GROUP_ORDER`, `ZERO32`, `ERROR_BAD_MAC`, `ERROR_BAD_SIGNATURE`, `ERROR_BAD_PRIVATE_KEY`, `ERROR_BAD_PUBLIC_KEY`, `ERROR_BAD_EPHEM_PRIVATE_KEY`, `ERROR_ECIES_SERIALIZED_LENGTH`, `ERROR_AES_IV_LENGTH`, `ERROR_AES_KEY_LENGTH`, `ERROR_AES_PKCS7_PADDING`, `ERROR_AES_GCM_KEY_LENGTH`, `ERROR_AES_GCM_NONCE_LENGTH`, `ERROR_AES_GCM_CIPHERTEXT_LENGTH`, `ERROR_EMPTY_MESSAGE`, `ERROR_MESSAGE_TOO_LONG`
 
 ---
 
@@ -490,23 +490,25 @@ bufferToUtf8(out);
 
 <h3 id="mod-encloom-pbkdf2"><code>encloom/pbkdf2</code></h3>
 
-**Description.** **PBKDF2** (HMAC-SHA-256 or HMAC-SHA-512). Output: 32-octet `key`, `salt`, `iterations`, `digest`. Random 16-octet salt and `PBKDF2_DEFAULT_ITERATIONS` unless overridden in `Pbkdf2Options`.
+**Description.** **PBKDF2** (HMAC-SHA-256 or HMAC-SHA-512). Output: `key`, `salt`, `iterations`, `digest`. Random 16-octet salt unless overridden. Default key length **32** octets (`keyLength` optional, max `MAX_KEY_LENGTH`). Default iterations follow OWASP and are also the minimum accepted: `PBKDF2_DEFAULT_ITERATIONS` (SHA-256) or `PBKDF2_DEFAULT_ITERATIONS_SHA512` (SHA-512).
 
 | Function | Input | Output |
 |----------|-------|--------|
 | `pbkdf2` | `password`, optional `Pbkdf2Options` | `Promise<Pbkdf2Result>` |
+| `pbkdf2Sync` | same | `Pbkdf2Result` |
 
 **Example**
 
 ```ts
-import { pbkdf2 } from "encloom/pbkdf2";
+import { pbkdf2, pbkdf2Sync } from "encloom/pbkdf2";
 import { utf8ToBuffer } from "encloom/helpers/encoding";
 
 const first = await pbkdf2(utf8ToBuffer("password"));
-const again = await pbkdf2(utf8ToBuffer("password"), {
+const again = pbkdf2Sync(utf8ToBuffer("password"), {
   salt: first.salt,
   iterations: first.iterations,
   digest: first.digest,
+  keyLength: first.key.length,
 });
 ```
 

@@ -58,6 +58,7 @@ export const ECIES_SERIALIZED_MIN_LENGTH =
 
 export const MAX_KEY_LENGTH = LENGTH_1024;
 export const PBKDF2_DEFAULT_ITERATIONS = 600_000;
+export const PBKDF2_DEFAULT_ITERATIONS_SHA512 = 220_000;
 export const MAX_MSG_LENGTH = LENGTH_32;
 
 export const EMPTY_BUFFER = new Uint8Array(LENGTH_0);

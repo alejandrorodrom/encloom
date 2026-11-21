@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.9] - 2026-11-21
+
+### Security
+
+- **`encloom/pbkdf2`:** add `PBKDF2_DEFAULT_ITERATIONS_SHA512` (**220 000**, OWASP) and use it when `digest` is SHA-512 and `iterations` is omitted. Explicit `iterations` below the OWASP floor for the chosen digest are rejected.
+
+### Added
+
+- **`pbkdf2Sync`:** synchronous PBKDF2 via `@noble/hashes` (async `pbkdf2` still uses Web Crypto).
+- **`Pbkdf2Options.keyLength`:** derived-key length in octets (default **32**, max `MAX_KEY_LENGTH`).
+
 ## [2.0.8] - 2026-11-21
 
 ### Security

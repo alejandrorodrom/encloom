@@ -1,20 +1,22 @@
-import { pbkdf2Sync } from "node:crypto";
+import { pbkdf2Sync as nodePbkdf2Sync } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   KEY_LENGTH,
+  MAX_KEY_LENGTH,
   PBKDF2_DEFAULT_ITERATIONS,
+  PBKDF2_DEFAULT_ITERATIONS_SHA512,
   PBKDF2_DIGEST_SHA256,
   PBKDF2_DIGEST_SHA512,
 } from "../../src/constants.js";
-import { pbkdf2 } from "../../src/pbkdf2.js";
+import { pbkdf2, pbkdf2Sync } from "../../src/pbkdf2.js";
 
 describe("pbkdf2 parity with Node.js crypto", () => {
   it("matches crypto.pbkdf2Sync (SHA-256)", async () => {
     const password = new Uint8Array(Buffer.from("p4ss", "utf8"));
     const salt = new Uint8Array(16);
     salt.fill(7);
-    const iterations = 42;
-    const expected = pbkdf2Sync(
+    const iterations = PBKDF2_DEFAULT_ITERATIONS;
+    const expected = nodePbkdf2Sync(
       Buffer.from(password),
       Buffer.from(salt),
       iterations,
@@ -35,8 +37,8 @@ describe("pbkdf2 parity with Node.js crypto", () => {
     const password = new Uint8Array([1, 2, 3]);
     const salt = new Uint8Array(16);
     salt.fill(9);
-    const iterations = 11;
-    const expected = pbkdf2Sync(
+    const iterations = PBKDF2_DEFAULT_ITERATIONS_SHA512;
+    const expected = nodePbkdf2Sync(
       Buffer.from(password),
       Buffer.from(salt),
       iterations,
@@ -49,6 +51,80 @@ describe("pbkdf2 parity with Node.js crypto", () => {
       digest: PBKDF2_DIGEST_SHA512,
     });
     expect(Buffer.from(out.key).equals(expected)).toBe(true);
+  });
+
+  it("SHA-512 without iterations uses PBKDF2_DEFAULT_ITERATIONS_SHA512", async () => {
+    const password = new Uint8Array([9, 8, 7]);
+    const salt = new Uint8Array(16);
+    salt.fill(4);
+    const expected = nodePbkdf2Sync(
+      Buffer.from(password),
+      Buffer.from(salt),
+      PBKDF2_DEFAULT_ITERATIONS_SHA512,
+      KEY_LENGTH,
+      "sha512",
+    );
+    const out = await pbkdf2(password, {
+      salt,
+      digest: PBKDF2_DIGEST_SHA512,
+    });
+    expect(out.iterations).toBe(PBKDF2_DEFAULT_ITERATIONS_SHA512);
+    expect(out.digest).toBe(PBKDF2_DIGEST_SHA512);
+    expect(Buffer.from(out.key).equals(expected)).toBe(true);
+  });
+
+  it("pbkdf2Sync matches Node and async for custom keyLength", async () => {
+    const password = new Uint8Array([4, 5, 6]);
+    const salt = new Uint8Array(16);
+    salt.fill(2);
+    const keyLength = 48;
+    const expected = nodePbkdf2Sync(
+      Buffer.from(password),
+      Buffer.from(salt),
+      PBKDF2_DEFAULT_ITERATIONS,
+      keyLength,
+      "sha256",
+    );
+    const syncOut = pbkdf2Sync(password, { salt, keyLength });
+    const asyncOut = await pbkdf2(password, { salt, keyLength });
+    expect(syncOut.key.length).toBe(keyLength);
+    expect(Buffer.from(syncOut.key).equals(expected)).toBe(true);
+    expect(Buffer.from(asyncOut.key).equals(expected)).toBe(true);
+  });
+
+  it("rejects iterations below the OWASP minimum for the digest", async () => {
+    const password = new Uint8Array([1]);
+    const salt = new Uint8Array(16);
+    await expect(
+      pbkdf2(password, {
+        salt,
+        iterations: PBKDF2_DEFAULT_ITERATIONS - 1,
+      }),
+    ).rejects.toThrow(
+      `PBKDF2: iterations must be an integer >= ${String(PBKDF2_DEFAULT_ITERATIONS)} for ${PBKDF2_DIGEST_SHA256}`,
+    );
+    expect(() =>
+      pbkdf2Sync(password, {
+        salt,
+        digest: PBKDF2_DIGEST_SHA512,
+        iterations: PBKDF2_DEFAULT_ITERATIONS_SHA512 - 1,
+      }),
+    ).toThrow(
+      `PBKDF2: iterations must be an integer >= ${String(PBKDF2_DEFAULT_ITERATIONS_SHA512)} for ${PBKDF2_DIGEST_SHA512}`,
+    );
+  });
+
+  it("rejects invalid keyLength", () => {
+    const password = new Uint8Array([1]);
+    const salt = new Uint8Array(16);
+    expect(() => pbkdf2Sync(password, { salt, keyLength: 0 })).toThrow(
+      `PBKDF2: keyLength must be an integer from 1 to ${String(MAX_KEY_LENGTH)}`,
+    );
+    expect(() =>
+      pbkdf2Sync(password, { salt, keyLength: MAX_KEY_LENGTH + 1 }),
+    ).toThrow(
+      `PBKDF2: keyLength must be an integer from 1 to ${String(MAX_KEY_LENGTH)}`,
+    );
   });
 
   describe("pbkdf2 snapshot batch 18", () => {
@@ -67,7 +143,7 @@ describe("pbkdf2 parity with Node.js crypto", () => {
       );
       const password = new Uint8Array(Buffer.from("pw", "utf8"));
       const out = await pbkdf2(password);
-      const expected = pbkdf2Sync(
+      const expected = nodePbkdf2Sync(
         Buffer.from(password),
         fixedSalt,
         PBKDF2_DEFAULT_ITERATIONS,

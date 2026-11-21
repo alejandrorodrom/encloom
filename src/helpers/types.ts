@@ -42,6 +42,7 @@ export interface Pbkdf2Options {
   salt?: Uint8Array;
   iterations?: number;
   digest?: Pbkdf2Digest;
+  keyLength?: number;
 }
 
 export interface Pbkdf2Result {
