@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.8] - 2026-11-21
+
+### Security
+
+- **`encloom/pbkdf2`:** raise `PBKDF2_DEFAULT_ITERATIONS` from **210 000** to **600 000**, matching the OWASP Password Storage Cheat Sheet minimum for PBKDF2-HMAC-SHA-256 (the default PRF). Callers that stored salt/iterations/digest from a previous derivation are unaffected; new derivations that omit `iterations` use the stronger work factor.
+
 ## [2.0.7] - 2026-11-16
 
 ### Security
