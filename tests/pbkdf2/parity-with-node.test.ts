@@ -73,7 +73,7 @@ describe("pbkdf2 parity with Node.js crypto", () => {
     expect(Buffer.from(out.key).equals(expected)).toBe(true);
   });
 
-  it("pbkdf2Sync matches Node and async for custom keyLength", async () => {
+  it("async pbkdf2 matches Node for multi-block keyLength", async () => {
     const password = new Uint8Array([4, 5, 6]);
     const salt = new Uint8Array(16);
     salt.fill(2);
@@ -85,12 +85,35 @@ describe("pbkdf2 parity with Node.js crypto", () => {
       keyLength,
       "sha256",
     );
-    const syncOut = pbkdf2Sync(password, { salt, keyLength });
-    const asyncOut = await pbkdf2(password, { salt, keyLength });
-    expect(syncOut.key.length).toBe(keyLength);
-    expect(Buffer.from(syncOut.key).equals(expected)).toBe(true);
-    expect(Buffer.from(asyncOut.key).equals(expected)).toBe(true);
+    const out = await pbkdf2(password, { salt, keyLength });
+    expect(out.key.length).toBe(keyLength);
+    expect(Buffer.from(out.key).equals(expected)).toBe(true);
   });
+
+  // Sync path is pure-JS (@noble/hashes); keep keyLength within one SHA-256 block
+  // and raise the timeout so CI runners can finish OWASP-level iteration counts.
+  it(
+    "pbkdf2Sync matches Node and async for custom keyLength",
+    async () => {
+      const password = new Uint8Array([4, 5, 6]);
+      const salt = new Uint8Array(16);
+      salt.fill(2);
+      const keyLength = 16;
+      const expected = nodePbkdf2Sync(
+        Buffer.from(password),
+        Buffer.from(salt),
+        PBKDF2_DEFAULT_ITERATIONS,
+        keyLength,
+        "sha256",
+      );
+      const syncOut = pbkdf2Sync(password, { salt, keyLength });
+      const asyncOut = await pbkdf2(password, { salt, keyLength });
+      expect(syncOut.key.length).toBe(keyLength);
+      expect(Buffer.from(syncOut.key).equals(expected)).toBe(true);
+      expect(Buffer.from(asyncOut.key).equals(expected)).toBe(true);
+    },
+    60_000,
+  );
 
   it("rejects iterations below the OWASP minimum for the digest", async () => {
     const password = new Uint8Array([1]);

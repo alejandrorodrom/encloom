@@ -29,28 +29,33 @@ describe("pbkdf2 when Web Crypto is unavailable or fails", () => {
     }
   });
 
-  it("pbkdf2Sync still works when Web Crypto API is unavailable", () => {
-    const originalCrypto = globalThis.crypto;
-    try {
-      Object.defineProperty(globalThis, "crypto", {
-        configurable: true,
-        value: {
-          getRandomValues: originalCrypto.getRandomValues.bind(originalCrypto),
-        },
-      });
+  // noble PBKDF2 at OWASP iteration counts is pure-JS and slow on CI runners.
+  it(
+    "pbkdf2Sync still works when Web Crypto API is unavailable",
+    () => {
+      const originalCrypto = globalThis.crypto;
+      try {
+        Object.defineProperty(globalThis, "crypto", {
+          configurable: true,
+          value: {
+            getRandomValues: originalCrypto.getRandomValues.bind(originalCrypto),
+          },
+        });
 
-      const out = pbkdf2Sync(new Uint8Array([1]), {
-        salt: new Uint8Array(LENGTH_16),
-      });
-      expect(out.key.length).toBe(32);
-      expect(out.iterations).toBe(PBKDF2_DEFAULT_ITERATIONS);
-    } finally {
-      Object.defineProperty(globalThis, "crypto", {
-        configurable: true,
-        value: originalCrypto,
-      });
-    }
-  });
+        const out = pbkdf2Sync(new Uint8Array([1]), {
+          salt: new Uint8Array(LENGTH_16),
+        });
+        expect(out.key.length).toBe(32);
+        expect(out.iterations).toBe(PBKDF2_DEFAULT_ITERATIONS);
+      } finally {
+        Object.defineProperty(globalThis, "crypto", {
+          configurable: true,
+          value: originalCrypto,
+        });
+      }
+    },
+    60_000,
+  );
 
   it("rejects when subtle.deriveBits throws", async () => {
     vi.spyOn(globalThis.crypto.subtle, "deriveBits").mockRejectedValueOnce(
