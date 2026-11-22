@@ -115,39 +115,62 @@ describe("pbkdf2 parity with Node.js crypto", () => {
     60_000,
   );
 
-  it("rejects iterations below the OWASP minimum for the digest", async () => {
+  it("allows explicit legacy iterations below the OWASP default", async () => {
+    const password = new Uint8Array([1, 2, 3]);
+    const salt = new Uint8Array(16);
+    salt.fill(5);
+    const legacyIterations = 210_000;
+    const expected = nodePbkdf2Sync(
+      Buffer.from(password),
+      Buffer.from(salt),
+      legacyIterations,
+      KEY_LENGTH,
+      "sha256",
+    );
+    const out = await pbkdf2(password, {
+      salt,
+      iterations: legacyIterations,
+    });
+    expect(out.iterations).toBe(legacyIterations);
+    expect(Buffer.from(out.key).equals(expected)).toBe(true);
+  });
+
+  it("rejects non-positive iterations", () => {
     const password = new Uint8Array([1]);
     const salt = new Uint8Array(16);
-    await expect(
-      pbkdf2(password, {
-        salt,
-        iterations: PBKDF2_DEFAULT_ITERATIONS - 1,
-      }),
-    ).rejects.toThrow(
-      `PBKDF2: iterations must be an integer >= ${String(PBKDF2_DEFAULT_ITERATIONS)} for ${PBKDF2_DIGEST_SHA256}`,
-    );
-    expect(() =>
-      pbkdf2Sync(password, {
-        salt,
-        digest: PBKDF2_DIGEST_SHA512,
-        iterations: PBKDF2_DEFAULT_ITERATIONS_SHA512 - 1,
-      }),
-    ).toThrow(
-      `PBKDF2: iterations must be an integer >= ${String(PBKDF2_DEFAULT_ITERATIONS_SHA512)} for ${PBKDF2_DIGEST_SHA512}`,
+    expect(() => pbkdf2Sync(password, { salt, iterations: 0 })).toThrow(
+      "PBKDF2: iterations must be an integer >= 1",
     );
   });
 
   it("rejects invalid keyLength", () => {
     const password = new Uint8Array([1]);
     const salt = new Uint8Array(16);
-    expect(() => pbkdf2Sync(password, { salt, keyLength: 0 })).toThrow(
-      `PBKDF2: keyLength must be an integer from 1 to ${String(MAX_KEY_LENGTH)}`,
+    expect(() => pbkdf2Sync(password, { salt, keyLength: 15 })).toThrow(
+      `PBKDF2: keyLength must be an integer from 16 to ${String(MAX_KEY_LENGTH)}`,
     );
     expect(() =>
       pbkdf2Sync(password, { salt, keyLength: MAX_KEY_LENGTH + 1 }),
     ).toThrow(
-      `PBKDF2: keyLength must be an integer from 1 to ${String(MAX_KEY_LENGTH)}`,
+      `PBKDF2: keyLength must be an integer from 16 to ${String(MAX_KEY_LENGTH)}`,
     );
+  });
+
+  it("rejects empty password, short salt, and unsupported digest", () => {
+    const salt = new Uint8Array(16);
+    expect(() => pbkdf2Sync(new Uint8Array(0), { salt })).toThrow(
+      "PBKDF2: password must not be empty",
+    );
+    expect(() =>
+      pbkdf2Sync(new Uint8Array([1]), { salt: new Uint8Array(1) }),
+    ).toThrow("PBKDF2: salt must be at least 16 bytes");
+    expect(() =>
+      pbkdf2Sync(new Uint8Array([1]), {
+        salt,
+        // Runtime / JS callers may pass an unsupported label.
+        digest: "sha1" as unknown as typeof PBKDF2_DIGEST_SHA256,
+      }),
+    ).toThrow("PBKDF2: digest must be sha256 or sha512");
   });
 
   describe("pbkdf2 snapshot batch 18", () => {

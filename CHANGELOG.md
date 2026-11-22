@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.10] - 2026-11-21
+
+### Security
+
+- **`encloom/pbkdf2`:** reject empty passwords, salts shorter than **16** octets, digests other than `sha256` / `sha512`, and `keyLength` below **16** octets (default remains **32**).
+- **`encloom/pbkdf2`:** OWASP iteration counts remain the defaults when `iterations` is omitted; explicit lower values are allowed so legacy stored parameters (e.g. **210 000** with SHA-256) can still be re-derived.
+
+### Changed
+
+- **Docs:** note that `pbkdf2Sync` is blocking (prefer `pbkdf2` in browsers / UI; sync in workers or Node).
+
 ## [2.0.9] - 2026-11-21
 
 ### Security

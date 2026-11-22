@@ -39,9 +39,15 @@ export type Pbkdf2Digest =
   | typeof PBKDF2_DIGEST_SHA512;
 
 export interface Pbkdf2Options {
+  /** Salt; random 16 octets when omitted. Must be at least 16 octets if set. */
   salt?: Uint8Array;
+  /**
+   * Iteration count. When omitted, uses the OWASP default for `digest`.
+   * Explicit values may be lower to re-derive legacy stored parameters.
+   */
   iterations?: number;
   digest?: Pbkdf2Digest;
+  /** Derived-key length in octets (16–`MAX_KEY_LENGTH`; default 32). */
   keyLength?: number;
 }
 

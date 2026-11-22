@@ -48,25 +48,38 @@ function resolvePbkdf2Params(
   password: Uint8Array,
   options?: Pbkdf2Options
 ): ResolvedPbkdf2 {
-  const salt = options?.salt ?? randomBytes(LENGTH_16);
   const passwordBytes = Uint8Array.from(password);
-  const saltBytes = Uint8Array.from(salt);
-  assert(salt.length > 0, "PBKDF2: salt must not be empty");
+  assert(passwordBytes.length > 0, "PBKDF2: password must not be empty");
 
-  const digest: Pbkdf2Digest = options?.digest ?? PBKDF2_DIGEST_SHA256;
-  const minIterations = minIterationsForDigest(digest);
-  const iterations = options?.iterations ?? minIterations;
+  const salt = options?.salt ?? randomBytes(LENGTH_16);
+  const saltBytes = Uint8Array.from(salt);
   assert(
-    Number.isInteger(iterations) && iterations >= minIterations,
-    `PBKDF2: iterations must be an integer >= ${minIterations} for ${digest}`
+    saltBytes.length >= LENGTH_16,
+    `PBKDF2: salt must be at least ${LENGTH_16} bytes`
+  );
+
+  // Widen for a runtime check: JS callers can pass labels outside Pbkdf2Digest.
+  const digestCandidate = (options?.digest ?? PBKDF2_DIGEST_SHA256) as string;
+  assert(
+    digestCandidate === PBKDF2_DIGEST_SHA256 ||
+      digestCandidate === PBKDF2_DIGEST_SHA512,
+    "PBKDF2: digest must be sha256 or sha512"
+  );
+  const digest = digestCandidate as Pbkdf2Digest;
+  // OWASP floors apply only as defaults. Explicit values may be lower so callers
+  // can re-derive keys stored before the floor was raised (e.g. 210_000 SHA-256).
+  const iterations = options?.iterations ?? minIterationsForDigest(digest);
+  assert(
+    Number.isInteger(iterations) && iterations >= 1,
+    "PBKDF2: iterations must be an integer >= 1"
   );
 
   const keyLength = options?.keyLength ?? KEY_LENGTH;
   assert(
     Number.isInteger(keyLength) &&
-      keyLength >= 1 &&
+      keyLength >= LENGTH_16 &&
       keyLength <= MAX_KEY_LENGTH,
-    `PBKDF2: keyLength must be an integer from 1 to ${MAX_KEY_LENGTH}`
+    `PBKDF2: keyLength must be an integer from ${LENGTH_16} to ${MAX_KEY_LENGTH}`
   );
 
   return { passwordBytes, saltBytes, iterations, digest, keyLength };
@@ -89,9 +102,17 @@ function toResult(
  *
  * Defaults: random 16-byte salt, HMAC-SHA-256, `PBKDF2_DEFAULT_ITERATIONS`,
  * 32-octet key. SHA-512 without `iterations` uses `PBKDF2_DEFAULT_ITERATIONS_SHA512`.
- * Explicit `iterations` must meet the OWASP minimum for the chosen digest.
+ * Explicit `iterations` may be below those OWASP defaults so legacy stored
+ * parameters (e.g. 210000 with SHA-256) can still be re-derived; prefer the
+ * defaults for new material. `keyLength` must be 16–`MAX_KEY_LENGTH` (default 32).
+ * Rejects empty passwords, salts shorter than 16 octets, and digests other than
+ * `sha256` / `sha512`.
  *
- * @param password Password material as raw bytes (encoding is up to the caller).
+ * **Blocking:** runs the full iteration count on the calling thread (pure JS via
+ * `@noble/hashes`). Prefer {@link pbkdf2} in browsers; use this in workers,
+ * Node, or other non-UI contexts.
+ *
+ * @param password Non-empty password material as raw bytes (encoding is up to the caller).
  * @param options Optional salt, iteration count, digest, and key length.
  * @returns Derived key and the salt, iterations, and digest that were used.
  */
@@ -112,7 +133,10 @@ export function pbkdf2Sync(
 /**
  * Async {@link pbkdf2Sync} via the Web Crypto API (`crypto.subtle`).
  *
- * @param password Password material as raw bytes (encoding is up to the caller).
+ * Prefer this over {@link pbkdf2Sync} on the main thread (especially in browsers):
+ * Web Crypto does not freeze the UI for the full iteration count.
+ *
+ * @param password Non-empty password material as raw bytes (encoding is up to the caller).
  * @param options Optional salt, iteration count, digest, and key length.
  * @returns Derived key and the salt, iterations, and digest that were used.
  */
