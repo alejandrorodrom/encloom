@@ -66,13 +66,18 @@ function resolvePbkdf2Params(
     "PBKDF2: digest must be sha256 or sha512"
   );
   const digest = digestCandidate as Pbkdf2Digest;
-  // OWASP floors apply only as defaults. Explicit values may be lower so callers
-  // can re-derive keys stored before the floor was raised (e.g. 210_000 SHA-256).
-  const iterations = options?.iterations ?? minIterationsForDigest(digest);
+  const minIterations = minIterationsForDigest(digest);
+  const iterations = options?.iterations ?? minIterations;
   assert(
     Number.isInteger(iterations) && iterations >= 1,
     "PBKDF2: iterations must be an integer >= 1"
   );
+  if (options?.allowLegacyIterations !== true) {
+    assert(
+      iterations >= minIterations,
+      `PBKDF2: iterations must be an integer >= ${String(minIterations)} for ${digest} (OWASP minimum); pass allowLegacyIterations: true to re-derive with lower counts`
+    );
+  }
 
   const keyLength = options?.keyLength ?? KEY_LENGTH;
   assert(
@@ -102,18 +107,18 @@ function toResult(
  *
  * Defaults: random 16-byte salt, HMAC-SHA-256, `PBKDF2_DEFAULT_ITERATIONS`,
  * 32-octet key. SHA-512 without `iterations` uses `PBKDF2_DEFAULT_ITERATIONS_SHA512`.
- * Explicit `iterations` may be below those OWASP defaults so legacy stored
- * parameters (e.g. 210000 with SHA-256) can still be re-derived; prefer the
- * defaults for new material. `keyLength` must be 16–`MAX_KEY_LENGTH` (default 32).
- * Rejects empty passwords, salts shorter than 16 octets, and digests other than
- * `sha256` / `sha512`.
+ * Explicit `iterations` below the OWASP floor for the chosen digest are rejected
+ * unless `allowLegacyIterations: true` (e.g. re-deriving 210000 with SHA-256).
+ * Prefer the defaults for new material. `keyLength` must be 16–`MAX_KEY_LENGTH`
+ * (default 32). Rejects empty passwords, salts shorter than 16 octets, and
+ * digests other than `sha256` / `sha512`.
  *
  * **Blocking:** runs the full iteration count on the calling thread (pure JS via
  * `@noble/hashes`). Prefer {@link pbkdf2} in browsers; use this in workers,
  * Node, or other non-UI contexts.
  *
  * @param password Non-empty password material as raw bytes (encoding is up to the caller).
- * @param options Optional salt, iteration count, digest, and key length.
+ * @param options Optional salt, iteration count, digest, key length, and legacy flag.
  * @returns Derived key and the salt, iterations, and digest that were used.
  */
 export function pbkdf2Sync(
@@ -137,7 +142,7 @@ export function pbkdf2Sync(
  * Web Crypto does not freeze the UI for the full iteration count.
  *
  * @param password Non-empty password material as raw bytes (encoding is up to the caller).
- * @param options Optional salt, iteration count, digest, and key length.
+ * @param options Optional salt, iteration count, digest, key length, and legacy flag.
  * @returns Derived key and the salt, iterations, and digest that were used.
  */
 export async function pbkdf2(

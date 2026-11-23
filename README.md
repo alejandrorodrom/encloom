@@ -490,7 +490,7 @@ bufferToUtf8(out);
 
 <h3 id="mod-encloom-pbkdf2"><code>encloom/pbkdf2</code></h3>
 
-**Description.** **PBKDF2** (HMAC-SHA-256 or HMAC-SHA-512). Output: `key`, `salt`, `iterations`, `digest`. Random 16-octet salt unless overridden (caller-supplied salt must be at least **16** octets). Password must be non-empty. Digest must be `sha256` or `sha512` (unsupported labels are rejected, not silently remapped). Default key length **32** octets (`keyLength` optional, **16**–`MAX_KEY_LENGTH`). Default iterations follow OWASP when omitted: `PBKDF2_DEFAULT_ITERATIONS` (SHA-256) or `PBKDF2_DEFAULT_ITERATIONS_SHA512` (SHA-512). Explicit lower `iterations` are allowed so you can re-derive keys stored under older work factors (e.g. 210 000 with SHA-256); prefer the defaults for new material.
+**Description.** **PBKDF2** (HMAC-SHA-256 or HMAC-SHA-512). Output: `key`, `salt`, `iterations`, `digest`. Random 16-octet salt unless overridden (caller-supplied salt must be at least **16** octets). Password must be non-empty. Digest must be `sha256` or `sha512` (unsupported labels are rejected, not silently remapped). Default key length **32** octets (`keyLength` optional, **16**–`MAX_KEY_LENGTH`). Default iterations follow OWASP when omitted: `PBKDF2_DEFAULT_ITERATIONS` (SHA-256) or `PBKDF2_DEFAULT_ITERATIONS_SHA512` (SHA-512). Explicit `iterations` below that floor are rejected unless you pass `allowLegacyIterations: true` (e.g. re-deriving 210 000 with SHA-256); prefer the defaults for new material.
 
 | Function | Input | Output |
 |----------|-------|--------|
@@ -509,6 +509,13 @@ const again = pbkdf2Sync(utf8ToBuffer("password"), {
   iterations: first.iterations,
   digest: first.digest,
   keyLength: first.key.length,
+});
+
+// Re-derive a key stored under a pre-OWASP work factor:
+const legacy = await pbkdf2(utf8ToBuffer("password"), {
+  salt: first.salt,
+  iterations: 210_000,
+  allowLegacyIterations: true,
 });
 ```
 

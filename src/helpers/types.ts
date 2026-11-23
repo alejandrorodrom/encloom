@@ -43,9 +43,15 @@ export interface Pbkdf2Options {
   salt?: Uint8Array;
   /**
    * Iteration count. When omitted, uses the OWASP default for `digest`.
-   * Explicit values may be lower to re-derive legacy stored parameters.
+   * Explicit values below that floor are rejected unless `allowLegacyIterations` is set.
    */
   iterations?: number;
+  /**
+   * Allow `iterations` below the OWASP floor for the chosen digest so legacy
+   * stored parameters (e.g. 210_000 with SHA-256) can still be re-derived.
+   * Prefer omitting this for new material.
+   */
+  allowLegacyIterations?: boolean;
   digest?: Pbkdf2Digest;
   /** Derived-key length in octets (16–`MAX_KEY_LENGTH`; default 32). */
   keyLength?: number;

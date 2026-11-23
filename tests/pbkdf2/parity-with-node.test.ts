@@ -115,7 +115,27 @@ describe("pbkdf2 parity with Node.js crypto", () => {
     60_000,
   );
 
-  it("allows explicit legacy iterations below the OWASP default", async () => {
+  it("rejects iterations below the OWASP floor without allowLegacyIterations", () => {
+    const password = new Uint8Array([1, 2, 3]);
+    const salt = new Uint8Array(16);
+    salt.fill(5);
+    expect(() =>
+      pbkdf2Sync(password, { salt, iterations: 210_000 }),
+    ).toThrow(
+      `PBKDF2: iterations must be an integer >= ${String(PBKDF2_DEFAULT_ITERATIONS)} for sha256 (OWASP minimum); pass allowLegacyIterations: true to re-derive with lower counts`,
+    );
+    expect(() =>
+      pbkdf2Sync(password, {
+        salt,
+        digest: PBKDF2_DIGEST_SHA512,
+        iterations: 100_000,
+      }),
+    ).toThrow(
+      `PBKDF2: iterations must be an integer >= ${String(PBKDF2_DEFAULT_ITERATIONS_SHA512)} for sha512 (OWASP minimum); pass allowLegacyIterations: true to re-derive with lower counts`,
+    );
+  });
+
+  it("allows explicit legacy iterations with allowLegacyIterations", async () => {
     const password = new Uint8Array([1, 2, 3]);
     const salt = new Uint8Array(16);
     salt.fill(5);
@@ -130,6 +150,7 @@ describe("pbkdf2 parity with Node.js crypto", () => {
     const out = await pbkdf2(password, {
       salt,
       iterations: legacyIterations,
+      allowLegacyIterations: true,
     });
     expect(out.iterations).toBe(legacyIterations);
     expect(Buffer.from(out.key).equals(expected)).toBe(true);
@@ -141,6 +162,13 @@ describe("pbkdf2 parity with Node.js crypto", () => {
     expect(() => pbkdf2Sync(password, { salt, iterations: 0 })).toThrow(
       "PBKDF2: iterations must be an integer >= 1",
     );
+    expect(() =>
+      pbkdf2Sync(password, {
+        salt,
+        iterations: 0,
+        allowLegacyIterations: true,
+      }),
+    ).toThrow("PBKDF2: iterations must be an integer >= 1");
   });
 
   it("rejects invalid keyLength", () => {

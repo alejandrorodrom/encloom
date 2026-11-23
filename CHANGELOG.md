@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-11-22
+
+### Security
+
+- **`encloom/pbkdf2`:** require the OWASP iteration floor for the chosen digest even when `iterations` is set explicitly. Values below the floor (e.g. **210 000** with SHA-256) need `allowLegacyIterations: true` so weak work factors cannot ship unnoticed.
+
+### Added
+
+- **`Pbkdf2Options.allowLegacyIterations`:** opt-in escape hatch to re-derive keys stored under older iteration counts.
+
+### Changed
+
+- **Breaking (minor):** callers that passed `iterations` below the OWASP default without the new flag will now throw. Omit `iterations` for new material, or set `allowLegacyIterations: true` only for legacy re-derivation.
+
 ## [2.0.10] - 2026-11-21
 
 ### Security
