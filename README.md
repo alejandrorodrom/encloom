@@ -494,8 +494,10 @@ bufferToUtf8(out);
 
 | Function | Input | Output |
 |----------|-------|--------|
-| `pbkdf2` | `password`, optional `Pbkdf2Options` | `Promise<Pbkdf2Result>` (prefer in browsers / UI) |
-| `pbkdf2Sync` | same | `Pbkdf2Result` (blocking; use in workers / Node) |
+| `pbkdf2` | `password`, optional `Pbkdf2Options` | `Promise<Pbkdf2Result>` (prefer for servers / browsers / UI) |
+| `pbkdf2Sync` | same | `Pbkdf2Result` (blocking; scripts, tests, or workers only) |
+
+> **Warning:** `pbkdf2Sync` runs the full iteration count on the calling thread (pure JS). At the OWASP default (**600 000** SHA-256) that can take ~1 s on Node and **blocks the event loop** for the whole time—do not paste it into a login route. Prefer `pbkdf2` (Web Crypto) there; keep sync for CLI scripts, tests, and dedicated workers.
 
 **Example**
 
@@ -504,7 +506,17 @@ import { pbkdf2, pbkdf2Sync } from "encloom/pbkdf2";
 import { utf8ToBuffer } from "encloom/helpers/encoding";
 
 const first = await pbkdf2(utf8ToBuffer("password"));
-const again = pbkdf2Sync(utf8ToBuffer("password"), {
+
+// Prefer async re-derive in Node login routes / request handlers:
+const again = await pbkdf2(utf8ToBuffer("password"), {
+  salt: first.salt,
+  iterations: first.iterations,
+  digest: first.digest,
+  keyLength: first.key.length,
+});
+
+// Sync is fine in scripts and tests (blocks the calling thread):
+const againSync = pbkdf2Sync(utf8ToBuffer("password"), {
   salt: first.salt,
   iterations: first.iterations,
   digest: first.digest,

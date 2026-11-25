@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2026-11-25
+
+### Changed
+
+- **Docs:** warn that `pbkdf2Sync` blocks the Node event loop (~1 s at OWASP SHA-256 defaults); prefer `pbkdf2` in login routes / request handlers, and reserve sync for scripts, tests, or workers. README example re-derives with async first.
+
 ## [2.1.0] - 2026-11-22
 
 ### Security

@@ -114,8 +114,10 @@ function toResult(
  * digests other than `sha256` / `sha512`.
  *
  * **Blocking:** runs the full iteration count on the calling thread (pure JS via
- * `@noble/hashes`). Prefer {@link pbkdf2} in browsers; use this in workers,
- * Node, or other non-UI contexts.
+ * `@noble/hashes`). At OWASP defaults this can take ~1s and freezes the Node
+ * event loop for that whole interval—do **not** use in request handlers or login
+ * routes. Prefer {@link pbkdf2} there (and in browsers / UI). Keep this for CLI
+ * scripts, tests, or dedicated workers.
  *
  * @param password Non-empty password material as raw bytes (encoding is up to the caller).
  * @param options Optional salt, iteration count, digest, key length, and legacy flag.
@@ -138,8 +140,9 @@ export function pbkdf2Sync(
 /**
  * Async {@link pbkdf2Sync} via the Web Crypto API (`crypto.subtle`).
  *
- * Prefer this over {@link pbkdf2Sync} on the main thread (especially in browsers):
- * Web Crypto does not freeze the UI for the full iteration count.
+ * Prefer this over {@link pbkdf2Sync} on the main thread and in Node servers:
+ * Web Crypto does not freeze the UI or block the event loop for the full
+ * iteration count (unlike sync, which can stall a login route for ~1s).
  *
  * @param password Non-empty password material as raw bytes (encoding is up to the caller).
  * @param options Optional salt, iteration count, digest, key length, and legacy flag.
